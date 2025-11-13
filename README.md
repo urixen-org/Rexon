@@ -66,6 +66,6 @@
    ```
 6. Open your browser and go to: [http://localhost:3000](http://localhost:3000)
 
-#### Crafted with 💖 by Xenovate Team 
+#### Crafted with 💖 by Urixen
 
-**Rexon™** is a trademark of Xenovate. The use of this trademark is subject to the terms and conditions set forth by **Xenovate.**
+**Rexon™** is a trademark of Urixen. The use of this trademark is subject to the terms and conditions set forth by **Urixen.**
