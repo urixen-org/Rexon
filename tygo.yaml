@@ -1,0 +1,3 @@
+packages:
+  - path: "rexon/types"
+    output_path: "web/types"

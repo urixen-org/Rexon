@@ -1,0 +1,39 @@
+.fm-button {
+  border-radius: 5px;
+  font-weight: 600;
+  border: none;
+
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.fm-button-primary {
+  background-color: var(--file-manager-primary-color);
+  color: white;
+
+  &:hover {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.2),
+        rgba(0, 0, 0, 0.2));
+  }
+}
+
+.fm-button-secondary {
+  background-color: #f0f0f0;
+  color: black;
+
+  &:hover {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.1),
+        rgba(0, 0, 0, 0.1));
+  }
+}
+
+.fm-button-danger {
+  background-color: #f44336;
+  color: white;
+
+  &:hover {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.2),
+        rgba(0, 0, 0, 0.2));
+  }
+}

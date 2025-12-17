@@ -1,0 +1,81 @@
+{
+    "database.connections": {
+        "1763617124611": {
+            "host": "127.0.0.1",
+            "dbPath": "./console.db",
+            "port": "3306",
+            "user": "root",
+            "authType": "default",
+            "password": "",
+            "encoding": "utf8",
+            "clientKeyPath": null,
+            "clientCertPath": null,
+            "caPath": null,
+            "database": null,
+            "useSSL": false,
+            "usingSSH": false,
+            "showHidden": false,
+            "includeDatabases": null,
+            "dbType": "SQLite",
+            "encrypt": true,
+            "isCluster": false,
+            "connectionUrl": "",
+            "srv": false,
+            "esAuth": "none",
+            "global": false,
+            "key": "1763617124611",
+            "timezone": "+00:00",
+            "ssh": {
+                "host": "",
+                "privateKeyPath": "C:\\Users\\BBC LaptopZone\\.ssh\\id_rsa",
+                "port": 22,
+                "username": "root",
+                "type": "password",
+                "connectTimeout": 10000,
+                "algorithms": {
+                    "cipher": []
+                }
+            },
+            "name": "console",
+            "connectionKey": "database.connections"
+        },
+        "1764169837237": {
+            "host": "127.0.0.1",
+            "dbPath": "e:\\rexon\\data.rexon",
+            "port": "3306",
+            "user": "root",
+            "authType": "default",
+            "password": "",
+            "encoding": "utf8",
+            "clientKeyPath": null,
+            "clientCertPath": null,
+            "caPath": null,
+            "database": null,
+            "useSSL": false,
+            "usingSSH": false,
+            "showHidden": false,
+            "includeDatabases": null,
+            "dbType": "SQLite",
+            "encrypt": true,
+            "isCluster": false,
+            "connectionUrl": "",
+            "srv": false,
+            "esAuth": "none",
+            "global": false,
+            "key": "1764169837237",
+            "timezone": "+00:00",
+            "ssh": {
+                "host": "",
+                "privateKeyPath": "C:\\Users\\BBC LaptopZone\\.ssh\\id_rsa",
+                "port": 22,
+                "username": "root",
+                "type": "password",
+                "connectTimeout": 10000,
+                "algorithms": {
+                    "cipher": []
+                }
+            },
+            "connectionKey": "database.connections"
+        }
+    }
+}
