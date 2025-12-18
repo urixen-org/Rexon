@@ -16,11 +16,14 @@ import (
 	"rexon/filemanager"
 	"rexon/filemanager/ftp"
 	"rexon/handlers"
+	"rexon/setup"
 	"rexon/sql"
 	"rexon/types"
 
 	"github.com/fatih/color"
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/commander"
+	"github.com/stretchr/objx"
 	"go.uber.org/ratelimit"
 )
 
@@ -46,12 +49,11 @@ func validatePath() gin.HandlerFunc {
 			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "path required"})
 			return
 		}
-
 		ctx.Next()
 	}
 }
 
-func main() {
+func runServer() {
 	flag.Parse()
 	limit = ratelimit.New(*rps)
 
@@ -64,11 +66,9 @@ func main() {
 	defer sql.Close()
 
 	if sql.GetValue("passcode") == "" {
-		sql.SetValue("passcode", env.Passcode)
+		panic("The passcode is not set please run in setup mode \n CMD: rexon setup \n Crashed: passcode not found in database")
 	}
 
-	// Setup Gin
-	//gin.SetMode(gin.ReleaseMode)
 	route := gin.New()
 	r := route.Group("/api")
 
@@ -146,18 +146,43 @@ func main() {
 			log.Fatalf("Server failed: %v", err)
 		}
 	}()
+
 	log.Println(color.GreenString("Server running on %s", env.WebListenOn))
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	<-quit
+
 	log.Println(color.YellowString("Shutting down server..."))
 
 	timeoutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
 	if err := srv.Shutdown(timeoutCtx); err != nil {
 		log.Fatalf("Server forced to shutdown: %v", err)
 	}
 
 	log.Println(color.GreenString("Server exited gracefully"))
+}
+
+func main() {
+	commander.Go(func() {
+		commander.Map(
+			"",
+			"Run server",
+			"Start Rexon server",
+			func(args objx.Map) {
+				runServer()
+			},
+		)
+
+		commander.Map(
+			"setup",
+			"Setup",
+			"Setup Rexon",
+			func(args objx.Map) {
+				setup.Setup()
+			},
+		)
+	})
 }

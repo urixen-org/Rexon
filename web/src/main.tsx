@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import {Router} from "@/components/Router.tsx";
+import { Router } from "@/components/Router.tsx";
 import Passcode from "./components/Passcode-Input.tsx";
 import { Toaster } from "@/components/ui/sonner";
 import "./App.css";
@@ -24,10 +24,9 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <PasscodeProvider>
       <SidebarProvider defaultOpen={false} className="">
-        {/*<Root /> */}
-        <Router />
+        <Root />
         <AppSidebar />
       </SidebarProvider>
     </PasscodeProvider>
-  </StrictMode>
+  </StrictMode>,
 );
