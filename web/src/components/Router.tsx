@@ -1,4 +1,4 @@
-// router.tsx
+
 import React, { useEffect, useState } from "react";
 import FileManager from "@/pages/filemanager";
 import Console from "@/pages/Console";

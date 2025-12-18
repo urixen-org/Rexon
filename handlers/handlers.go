@@ -337,7 +337,6 @@ func HandleFileManagerUpload(ctx *gin.Context) {
 
 	base := filemanager.BaseDir
 
-	// Folder where the file should be placed
 	targetDir := ctx.Query("path")
 	if targetDir == "" {
 		targetDir = "/"
@@ -349,24 +348,20 @@ func HandleFileManagerUpload(ctx *gin.Context) {
 		return
 	}
 
-	// Must be a directory
 	info, err := os.Stat(absDir)
 	if err != nil || !info.IsDir() {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "target is not a directory"})
 		return
 	}
 
-	// Get uploaded file
 	file, err := ctx.FormFile("file")
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing file"})
 		return
 	}
 
-	// Final save path
 	savePath := filepath.Join(absDir, filepath.Base(file.Filename))
 
-	// Save the file
 	if err := ctx.SaveUploadedFile(file, savePath); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "upload failed"})
 		return
@@ -813,7 +808,6 @@ func HandleConfigUpdate(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
-// helper
 func isNumeric(s string) bool {
 	for _, c := range s {
 		if c < '0' || c > '9' {

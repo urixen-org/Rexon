@@ -29,7 +29,6 @@ var (
 	rps   = flag.Int("rps", 100, "Requests per second")
 )
 
-// Middleware: Leaky bucket rate limiter
 func leakBucket() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		limit.Take()
@@ -59,10 +58,8 @@ func main() {
 	env := config.LoadEnv()
 	filemanager.BaseDir = env.ServerFolder
 
-	// Print startup banner
 	ancii.Print(env.WebListenOn, env.FTPHost+":"+fmt.Sprint(env.FTPPort), env.FTPUser, env.Passcode)
 
-	// Initialize DB
 	sql.Init("./data.rexon")
 	defer sql.Close()
 
@@ -75,7 +72,6 @@ func main() {
 	route := gin.New()
 	r := route.Group("/api")
 
-	// Custom logger
 	r.Use(gin.LoggerWithFormatter(func(params gin.LogFormatterParams) string {
 		rexon := color.New(color.FgBlue).Sprint("[REXON]")
 
@@ -104,7 +100,6 @@ func main() {
 
 	r.Use(leakBucket())
 
-	// Core API routes
 	r.POST("/start", handlers.HandleStart)
 	r.POST("/stop", handlers.HandleStop)
 	r.POST("/status", handlers.HandleStatus)
@@ -120,7 +115,6 @@ func main() {
 	r.GET("/config", handlers.HandleConfig)
 	r.POST("/config", handlers.HandleConfigUpdate)
 
-	// FileManager routes
 	fGroup := r.Group("/filemanager")
 	fGroup.Use(validatePath())
 	{
@@ -138,12 +132,10 @@ func main() {
 		fGroup.POST("/extract", handlers.HandleFileManagerExtract)
 	}
 
-	// Start FTP server in a goroutine
 	go func() {
 		ftp.Start()
 	}()
 
-	// Graceful shutdown
 	srv := &http.Server{
 		Addr:    env.WebListenOn,
 		Handler: route,

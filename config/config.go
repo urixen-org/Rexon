@@ -8,7 +8,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Env holds all environment variables
 type Env struct {
 	ServerFolder string
 	Passcode     string
@@ -18,9 +17,7 @@ type Env struct {
 	FTPUser      string
 }
 
-// LoadEnv loads the .env file and returns the Env struct
 func LoadEnv() *Env {
-	// Load .env file, ignore error if not found (allow real env vars)
 	if err := godotenv.Load(); err != nil {
 		log.Println("Warning: .env file not found, using system environment variables")
 	}

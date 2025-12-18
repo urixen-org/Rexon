@@ -1,4 +1,4 @@
-// process/manager.go
+
 package process
 
 import (
@@ -23,10 +23,9 @@ type Manager struct {
 	cancel    context.CancelFunc
 	done      chan struct{}
 	logBroker *LogBroker
-	stopping  bool // Added to track stopping state
+	stopping  bool
 }
 
-// LogBroker broadcasts log lines to multiple subscribers
 type LogBroker struct {
 	mu          sync.RWMutex
 	subscribers map[chan string]struct{}
@@ -65,7 +64,7 @@ func (b *LogBroker) Broadcast(line string) {
 		select {
 		case ch <- line:
 		default:
-			// Skip if channel is full
+		// i am here to just say: "I am doing nothing"
 		}
 	}
 }
@@ -207,14 +206,12 @@ func (m *Manager) Stop() error {
 		return errors.New("process already stopping")
 	}
 
-	// Mark as stopping to prevent race conditions
 	m.stopping = true
 
 	if m.stdin != nil {
 		m.stdin.Write([]byte("stop\n"))
 	}
 
-	// Store references but DON'T clear m.cmd yet
 	cmd := m.cmd
 	stdin := m.stdin
 	logFile := m.logFile
@@ -222,13 +219,11 @@ func (m *Manager) Stop() error {
 	done := m.done
 	logBroker := m.logBroker
 
-	// Only clear these non-essential fields
 	m.stdin = nil
 	m.sessionID = ""
 
 	m.mu.Unlock()
 
-	// Wait for graceful shutdown or timeout
 	gracefulStop := make(chan struct{})
 	go func() {
 		<-done
@@ -237,16 +232,13 @@ func (m *Manager) Stop() error {
 
 	select {
 	case <-gracefulStop:
-		// Process stopped gracefully
 	case <-time.After(5 * time.Second):
-		// Timeout - force kill
 		if cmd.Process != nil {
 			cmd.Process.Kill()
 		}
 		<-done
 	}
 
-	// Clean up resources
 	if stdin != nil {
 		stdin.Close()
 	}
@@ -260,7 +252,6 @@ func (m *Manager) Stop() error {
 		logBroker.Close()
 	}
 
-	// NOW mark as fully stopped - no race condition
 	m.mu.Lock()
 	m.cmd = nil
 	m.cancel = nil

@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/sidebar";
 import { navigate } from "./Router";
 
-// Menu items.
 const items = [
   {
     title: "Console",
