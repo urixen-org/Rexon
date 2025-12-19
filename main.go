@@ -25,7 +25,8 @@ import (
 	"github.com/stretchr/commander"
 	"github.com/stretchr/objx"
 	"go.uber.org/ratelimit"
-	"golang.ngrok.com/ngrok/v2"
+	"golang.ngrok.com/ngrok"
+	ngrokconfig "golang.ngrok.com/ngrok/config"
 )
 
 var (
@@ -54,41 +55,47 @@ func validatePath() gin.HandlerFunc {
 	}
 }
 
-func runNgrok(env config.Env) string {
+func runNgrok(env *config.Env, handler http.Handler, ngrokCh chan<- string) {
 	ctx := context.Background()
 	ngrokToken := sql.GetValue("ngrok_token")
 	ngrokEndpoint := sql.GetValue("ngrok_endpoint")
+
 	if ngrokToken == "" {
-		return ""
+		log.Println("No ngrok token found, skipping ngrok tunnel")
+		close(ngrokCh)
+		return
 	}
 
-	agent, err := ngrok.NewAgent(ngrok.WithAuthtoken(ngrokToken))
-	if err != nil {
-		panic(err)
+	opts := []ngrok.ConnectOption{
+		ngrok.WithAuthtoken(ngrokToken),
 	}
 
-	var ln ngrok.EndpointForwarder
+	var tunnelOpts []ngrokconfig.HTTPEndpointOption
 	if ngrokEndpoint != "" {
-		ln, err = agent.Forward(ctx,
-			ngrok.WithUpstream(env.WebListenOn),
-			ngrok.WithURL(ngrokEndpoint),
-		)
-		if err != nil {
-			ln, err = agent.Forward(ctx, ngrok.WithUpstream(env.WebListenOn))
-			if err != nil {
-				panic(err)
-			}
-		}
-	} else {
-		ln, err = agent.Forward(ctx, ngrok.WithUpstream(env.WebListenOn))
-		if err != nil {
-			panic(err)
-		}
+		tunnelOpts = append(tunnelOpts, ngrokconfig.WithDomain(ngrokEndpoint))
 	}
 
-	fmt.Println("Ngrok URL:", ln.URL())
-	ancii.Print(ln.URL().Host, env.FTPHost+":"+fmt.Sprint(env.FTPPort), env.FTPUser, sql.GetValue("passcode"))
-	return ln.URL().Host
+	listener, err := ngrok.Listen(ctx,
+		ngrokconfig.HTTPEndpoint(tunnelOpts...),
+		opts...,
+	)
+	if err != nil {
+		log.Printf("Failed to create ngrok tunnel: %v", err)
+		close(ngrokCh)
+		return
+	}
+
+	ngrokURL := listener.URL()
+	log.Println(color.GreenString("Ngrok tunnel created at %s", ngrokURL))
+	ancii.Print(ngrokURL, env.FTPHost+":"+fmt.Sprint(env.FTPPort), env.FTPUser, sql.GetValue("passcode"))
+
+	ngrokCh <- ngrokURL
+
+	go func() {
+		if err := http.Serve(listener, handler); err != nil {
+			log.Printf("Ngrok tunnel error: %v", err)
+		}
+	}()
 }
 
 func runServer() {
@@ -105,11 +112,6 @@ func runServer() {
 		panic("The passcode is not set please run in setup mode \n CMD: rexon setup \n Crashed: passcode not found in database")
 	}
 
-	ngrokCh := make(chan string)
-	go func() {
-		ngrokURL := runNgrok(*env)
-		log.Println(color.GreenString("Ngrok tunnel available at %s", ngrokURL))
-	}()
 	ancii.Print(env.WebListenOn, env.FTPHost+":"+fmt.Sprint(env.FTPPort), env.FTPUser, sql.GetValue("passcode"))
 
 	go ftp.Start()
@@ -186,8 +188,18 @@ func runServer() {
 	}()
 
 	log.Println(color.GreenString("Server running on %s", env.WebListenOn))
-	ngrokURL := <-ngrokCh
-	log.Println(color.GreenString("Ngrok tunnel available at %s", ngrokURL))
+
+	ngrokCh := make(chan string, 1)
+	go runNgrok(env, route, ngrokCh)
+
+	select {
+	case ngrokURL := <-ngrokCh:
+		if ngrokURL != "" {
+			log.Println(color.GreenString("Ngrok tunnel available at %s", ngrokURL))
+		}
+	case <-time.After(10 * time.Second):
+		log.Println(color.YellowString("Ngrok tunnel setup timed out or not configured"))
+	}
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
