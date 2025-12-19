@@ -25,6 +25,7 @@ import (
 	"github.com/stretchr/commander"
 	"github.com/stretchr/objx"
 	"go.uber.org/ratelimit"
+	"golang.ngrok.com/ngrok/v2"
 )
 
 var (
@@ -53,14 +54,49 @@ func validatePath() gin.HandlerFunc {
 	}
 }
 
+func runNgrok(env config.Env) string {
+	ctx := context.Background()
+	ngrokToken := sql.GetValue("ngrok_token")
+	ngrokEndpoint := sql.GetValue("ngrok_endpoint")
+	if ngrokToken == "" {
+		return ""
+	}
+
+	agent, err := ngrok.NewAgent(ngrok.WithAuthtoken(ngrokToken))
+	if err != nil {
+		panic(err)
+	}
+
+	var ln ngrok.EndpointForwarder
+	if ngrokEndpoint != "" {
+		ln, err = agent.Forward(ctx,
+			ngrok.WithUpstream(env.WebListenOn),
+			ngrok.WithURL(ngrokEndpoint),
+		)
+		if err != nil {
+			ln, err = agent.Forward(ctx, ngrok.WithUpstream(env.WebListenOn))
+			if err != nil {
+				panic(err)
+			}
+		}
+	} else {
+		ln, err = agent.Forward(ctx, ngrok.WithUpstream(env.WebListenOn))
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	fmt.Println("Ngrok URL:", ln.URL())
+	ancii.Print(ln.URL().Host, env.FTPHost+":"+fmt.Sprint(env.FTPPort), env.FTPUser, sql.GetValue("passcode"))
+	return ln.URL().Host
+}
+
 func runServer() {
 	flag.Parse()
 	limit = ratelimit.New(*rps)
 
 	env := config.LoadEnv()
 	filemanager.BaseDir = env.ServerFolder
-
-	ancii.Print(env.WebListenOn, env.FTPHost+":"+fmt.Sprint(env.FTPPort), env.FTPUser, env.Passcode)
 
 	sql.Init("./data.rexon")
 	defer sql.Close()
@@ -69,12 +105,20 @@ func runServer() {
 		panic("The passcode is not set please run in setup mode \n CMD: rexon setup \n Crashed: passcode not found in database")
 	}
 
+	ngrokCh := make(chan string)
+	go func() {
+		ngrokURL := runNgrok(*env)
+		log.Println(color.GreenString("Ngrok tunnel available at %s", ngrokURL))
+	}()
+	ancii.Print(env.WebListenOn, env.FTPHost+":"+fmt.Sprint(env.FTPPort), env.FTPUser, sql.GetValue("passcode"))
+
+	go ftp.Start()
+
 	route := gin.New()
 	r := route.Group("/api")
 
 	r.Use(gin.LoggerWithFormatter(func(params gin.LogFormatterParams) string {
 		rexon := color.New(color.FgBlue).Sprint("[REXON]")
-
 		var statusColor *color.Color
 		switch {
 		case params.StatusCode >= 200 && params.StatusCode < 300:
@@ -86,7 +130,6 @@ func runServer() {
 		default:
 			statusColor = color.New(color.FgWhite)
 		}
-
 		return fmt.Sprintf(
 			"%s [%s] [%s]: {%s} {%s} {%s}\n",
 			rexon,
@@ -97,7 +140,6 @@ func runServer() {
 			params.ClientIP,
 		)
 	}))
-
 	r.Use(leakBucket())
 
 	r.POST("/start", handlers.HandleStart)
@@ -132,10 +174,6 @@ func runServer() {
 		fGroup.POST("/extract", handlers.HandleFileManagerExtract)
 	}
 
-	go func() {
-		ftp.Start()
-	}()
-
 	srv := &http.Server{
 		Addr:    env.WebListenOn,
 		Handler: route,
@@ -148,20 +186,19 @@ func runServer() {
 	}()
 
 	log.Println(color.GreenString("Server running on %s", env.WebListenOn))
+	ngrokURL := <-ngrokCh
+	log.Println(color.GreenString("Ngrok tunnel available at %s", ngrokURL))
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	<-quit
 
 	log.Println(color.YellowString("Shutting down server..."))
-
 	timeoutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
 	if err := srv.Shutdown(timeoutCtx); err != nil {
 		log.Fatalf("Server forced to shutdown: %v", err)
 	}
-
 	log.Println(color.GreenString("Server exited gracefully"))
 }
 
@@ -175,7 +212,6 @@ func main() {
 				runServer()
 			},
 		)
-
 		commander.Map(
 			"setup",
 			"Setup",

@@ -1,42 +1,70 @@
 package ancii
 
-import "fmt"
+import (
+	"fmt"
 
-func Print(web string, ftp string, ftpUser string, ftpPass string) {
-	// Predeclare variables
-	var colors = []string{
-		"\033[31m", // red
-		"\033[33m", // yellow
-		"\033[32m", // green
-		"\033[36m", // cyan
-		"\033[34m", // blue
-		"\033[35m", // magenta
-		"\033[0m",  // reset
-	}
+	"github.com/charmbracelet/lipgloss"
+)
 
-	var art = ` ▄▄▄▄▄  ▄▄▄▄▄▄ ▄    ▄  ▄▄▄▄  ▄▄   ▄
- █   ▀█ █       █  █  ▄▀  ▀▄ █▀▄  █
- █▄▄▄▄▀ █▄▄▄▄▄   ██   █    █ █ █▄ █
- █   ▀▄ █       ▄▀▀▄  █    █ █  █ █
- █    ▀ █▄▄▄▄▄ ▄▀  ▀▄  █▄▄█  █   ██ 
- `
+var art = ` ▄▄▄▄▄  ▄▄▄▄▄▄ ▄    ▄  ▄▄▄▄  ▄▄   ▄
+█   ▀█ █       █  █  ▄▀  ▀▄ █▀▄  █
+█▄▄▄▄▀ █▄▄▄▄▄   ██   █    █ █ █▄ █
+█   ▀▄ █       ▄▀▀▄  █    █ █  █ █
+█    ▀ █▄▄▄▄▄ ▄▀  ▀▄  █▄▄█  █   ██
+`
 
-	var colorIndex int
-	var r rune
+var colors = []string{
+	"\033[31m", // red
+	"\033[33m", // yellow
+	"\033[32m", // green
+	"\033[36m", // cyan
+	"\033[34m", // blue
+	"\033[35m", // magenta
+}
 
-	for _, r = range art {
+func rainbowText(input string) string {
+	result := ""
+	colorIndex := 0
+	for _, r := range input {
 		if r == '\n' {
-			fmt.Print("\n")
+			result += "\n"
 			continue
 		}
-		fmt.Print(colors[colorIndex%len(colors)] + string(r) + "\033[0m")
+		result += colors[colorIndex%len(colors)] + string(r) + "\033[0m"
 		colorIndex++
 	}
-	fmt.Printf(`
-	%sWEB%s: %s
-	%sFTP%s: %s
-	%sFTP username%s: %s
-	%sFTP password%s: %s
-	%s
-	`, colors[4], colors[5], web, colors[4], colors[5], ftp, colors[4], colors[5], ftpUser, colors[4], colors[5], ftpPass, colors[6])
+	return result
+}
+
+// Print prints the ASCII art with the panel info
+func Print(web, ftp, ftpUser, ftpPass string) {
+	labelColor := lipgloss.NewStyle().Foreground(lipgloss.Color("12")) // bright cyan
+	valueColor := lipgloss.NewStyle().Foreground(lipgloss.Color("13")) // bright magenta
+
+	box := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("10")).
+		Padding(1, 2).
+		Width(60)
+
+	content := fmt.Sprintf("%s\n\n%s: %s\n%s: %s\n%s: %s\n%s: %s",
+		rainbowText(art),
+		labelColor.Render("WEB"), valueColor.Render(web),
+		labelColor.Render("FTP"), valueColor.Render(ftp),
+		labelColor.Render("FTP username"), valueColor.Render(ftpUser),
+		labelColor.Render("FTP password"), valueColor.Render(ftpPass),
+	)
+
+	fmt.Println(box.Render(content))
+}
+
+// PrintNoInput prints only the ASCII art without any input
+func PrintNoInput() {
+	box := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("10")).
+		Padding(1, 2).
+		Width(60)
+
+	fmt.Println(box.Render(rainbowText(art)))
 }

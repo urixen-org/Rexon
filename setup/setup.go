@@ -1,9 +1,11 @@
 package setup
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"regexp"
+	"rexon/ancii"
 	"rexon/sql"
 	"strings"
 
@@ -11,7 +13,8 @@ import (
 	"github.com/charmbracelet/x/term"
 )
 
-func Setup() string {
+func Setup() {
+	ancii.PrintNoInput()
 	sql.Init("./data.rexon")
 	defer sql.Close()
 
@@ -28,54 +31,86 @@ func Setup() string {
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("10")).
 		Padding(1, 2).
-		Width(42)
+		Width(50)
 
-	if sql.GetValue("passcode") != "" {
-		fmt.Println(box.Render(
-			title.Render("Rexon Panel Setup") + "\n\n" + muted.Render("Look like you have already set passcode\n") +
-				muted.Render("Create a 6-digit passcode to secure your panel"),
-		))
-	} else {
-		fmt.Println(box.Render(
-			title.Render("Rexon Panel Setup") + "\n\n" +
-				muted.Render("Create a 6-digit passcode to secure your panel"),
-		))
+	renderBox := func(content string) {
+		fmt.Println(box.Render(content))
 	}
 
+	reader := bufio.NewReader(os.Stdin)
+
+	if sql.GetValue("passcode") != "" {
+		renderBox(title.Render("Rexon Panel Setup") + "\n\n" +
+			muted.Render("Looks like you already have a passcode.\nUpdate your 6-digit passcode to secure your panel"))
+	} else {
+		renderBox(title.Render("Rexon Panel Setup") + "\n\n" +
+			muted.Render("Create a 6-digit passcode to secure your panel"))
+	}
+
+	var passcode string
 	for {
-		fmt.Print("Create passcode (6 digits)\n› ")
+		renderBox("Create passcode (6 digits)")
+		fmt.Print("› ")
 		first := readHidden()
 
 		if !re.MatchString(first) {
-			fmt.Println("Passcode must be exactly 6 digits")
+			renderBox("Passcode must be exactly 6 digits")
 			continue
 		}
 
-		fmt.Print("Confirm passcode\n› ")
+		renderBox("Confirm passcode")
+		fmt.Print("› ")
 		second := readHidden()
 
 		if first != second {
-			fmt.Println("Passcodes do not match. Try again.")
+			renderBox("Passcodes do not match. Try again.")
 			continue
 		}
 
-		fmt.Println()
-		fmt.Println(box.Render(
-			title.Render("✓ Setup Complete") + "\n\n" +
-				muted.Render("Your panel is now secured"),
-		))
-
-		return first
+		passcode = first
+		break
 	}
+
+	sql.SetValue("passcode", passcode)
+
+	renderBox("Do you want to expose your panel using ngrok? (y/n)")
+	fmt.Print("› ")
+	choiceRaw, _ := reader.ReadString('\n')
+	choice := strings.ToLower(strings.TrimSpace(choiceRaw))
+
+	if choice == "y" || choice == "yes" {
+		renderBox("Enter ngrok auth token (optional)")
+		fmt.Print("› ")
+		tokenRaw, _ := reader.ReadString('\n')
+		token := strings.TrimSpace(tokenRaw)
+		if token != "" {
+			sql.SetValue("ngrok_token", token)
+		}
+
+		renderBox("Enter ngrok endpoint (optional)")
+		fmt.Print("› ")
+		endpointRaw, _ := reader.ReadString('\n')
+		endpoint := strings.TrimSpace(endpointRaw)
+		if endpoint != "" {
+			sql.SetValue("ngrok_endpoint", endpoint)
+		}
+	}
+
+	endpoint := sql.GetValue("ngrok_endpoint")
+	endpointMsg := ""
+	if endpoint != "" {
+		endpointMsg = "\nYou can now access your panel at: " + endpoint
+	}
+
+	renderBox(title.Render("✓ Setup Complete") + "\n\n" +
+		muted.Render("Your panel is now secured")+muted.Render(endpointMsg))
 }
 
 func readHidden() string {
 	bytes, err := term.ReadPassword(os.Stdin.Fd())
 	fmt.Println()
-
 	if err != nil {
 		return ""
 	}
-
 	return strings.TrimSpace(string(bytes))
 }
