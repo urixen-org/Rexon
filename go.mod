@@ -11,7 +11,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/stretchr/commander v0.0.0-20130925004555-18f86d1c1da1
 	github.com/stretchr/objx v0.5.0
-	golang.ngrok.com/ngrok/v2 v2.1.1
+	golang.ngrok.com/ngrok v1.13.0
 )
 
 require (
@@ -28,7 +28,6 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.ngrok.com/muxado/v2 v2.0.1 // indirect
-	golang.ngrok.com/ngrok v1.13.0 // indirect
 	golang.org/x/term v0.33.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
