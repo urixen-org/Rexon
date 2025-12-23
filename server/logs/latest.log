@@ -1,18 +1,13 @@
-[21:42:51] [Server thread/INFO]: Starting minecraft server version 1.8.9
-[21:42:51] [Server thread/INFO]: Loading properties
-[21:42:51] [Server thread/INFO]: Default game type: SURVIVAL
-[21:42:51] [Server thread/INFO]: Generating keypair
-[21:42:51] [Server thread/INFO]: Starting Minecraft server on *:25565
-[21:42:51] [Server thread/INFO]: Using default channel type
-[21:42:51] [Server thread/INFO]: Preparing level "world"
-[21:42:52] [Server thread/INFO]: Preparing start region for level 0
-[21:42:53] [Server thread/INFO]: Preparing spawn area: 72%
-[21:42:53] [Server thread/INFO]: Done (1.585s)! For help, type "help" or "?"
-[21:42:57] [Server thread/INFO]: Stopping the server
-[21:42:57] [Server thread/INFO]: Stopping server
-[21:42:57] [Server thread/INFO]: Saving players
-[21:42:57] [Server thread/INFO]: Saving worlds
-[21:42:57] [Server thread/INFO]: Saving chunks for level 'world'/Overworld
-[21:42:57] [Server thread/INFO]: Saving chunks for level 'world'/Nether
-[21:42:57] [Server thread/INFO]: Saving chunks for level 'world'/The End
-[21:42:57] [Server Shutdown Thread/INFO]: Stopping server
+[14:45:28] [Server thread/INFO]: Starting minecraft server version 1.8.9
+[14:45:28] [Server thread/INFO]: Loading properties
+[14:45:29] [Server thread/INFO]: Default game type: SURVIVAL
+[14:45:29] [Server thread/INFO]: Generating keypair
+[14:45:29] [Server thread/INFO]: Starting Minecraft server on *:25565
+[14:45:29] [Server thread/INFO]: Using default channel type
+[14:45:29] [Server thread/INFO]: Preparing level "world"
+[14:45:29] [Server thread/INFO]: Preparing start region for level 0
+[14:45:30] [Server thread/INFO]: Preparing spawn area: 58%
+[14:45:31] [Server thread/INFO]: Done (1.779s)! For help, type "help" or "?"
+[14:45:31] [Server thread/INFO]: Starting GS4 status listener
+[14:45:31] [Server thread/INFO]: Setting default query port to 25565
+[14:45:31] [Query Listener #1/INFO]: Query running on 0.0.0.0:25565
