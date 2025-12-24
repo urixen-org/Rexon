@@ -402,15 +402,15 @@ func (c *Client) GetPing() ([]byte, error) {
 
 // ListTunnelsRequest represents the request to list tunnels
 type ListTunnelsRequest struct {
-	TunnelID *string `json:"tunnel_id"`
-	AgentID  *string `json:"agent_id"`
+	TunnelID any `json:"tunnel_id"`
+	AgentID  any `json:"agent_id"`
 }
 
 // ListTunnels retrieves a list of tunnels
 // Parameters:
 //   - tunnelID: Optional tunnel ID to filter by (nil for all)
 //   - agentID: Optional agent ID to filter by (nil for all)
-func (c *Client) ListTunnels(tunnelID, agentID *string) ([]byte, error) {
+func (c *Client) ListTunnels(tunnelID, agentID any) ([]byte, error) {
 	req := ListTunnelsRequest{
 		TunnelID: tunnelID,
 		AgentID:  agentID,
@@ -442,11 +442,11 @@ func (c *Client) QueryRegion(limitRegion *string) ([]byte, error) {
 
 // UpdateTunnelRequest represents the request to update a tunnel
 type UpdateTunnelRequest struct {
-	TunnelID  string  `json:"tunnel_id"`
-	LocalIP   string  `json:"local_ip"`
-	LocalPort int     `json:"local_port"`
-	AgentID   *string `json:"agent_id"`
-	Enabled   bool    `json:"enabled"`
+	TunnelID  string `json:"tunnel_id"`
+	LocalIP   string `json:"local_ip"`
+	LocalPort int    `json:"local_port"`
+	AgentID   string `json:"agent_id"`
+	Enabled   bool   `json:"enabled"`
 }
 
 // UpdateTunnel updates an existing tunnel's configuration
@@ -456,7 +456,7 @@ type UpdateTunnelRequest struct {
 //   - localPort: New local port
 //   - agentID: Optional new agent ID (nil to keep current)
 //   - enabled: Whether the tunnel should be enabled
-func (c *Client) UpdateTunnel(tunnelID, localIP string, localPort int, agentID *string, enabled bool) ([]byte, error) {
+func (c *Client) UpdateTunnel(tunnelID, localIP string, localPort int, agentID string, enabled bool) ([]byte, error) {
 	req := UpdateTunnelRequest{
 		TunnelID:  tunnelID,
 		LocalIP:   localIP,

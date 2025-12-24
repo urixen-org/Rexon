@@ -15,3 +15,121 @@ export interface FileInfo {
   ext: string;
   path: string;
 }
+export interface Tunnel {
+  status: string;
+  data: {
+    tunnels: {
+      id: string;
+      tunnel_type: string;
+      created_at: any /* time.Time */;
+      name: string;
+      port_type: string;
+      port_count: number /* int */;
+      alloc: {
+        status: string;
+        data: {
+          id: string;
+          ip_hostname: string;
+          static_ip4: string;
+          static_ip6: string;
+          assigned_domain: string;
+          assigned_srv: string;
+          tunnel_ip: string;
+          port_start: number /* int */;
+          port_end: number /* int */;
+          assignment: {
+            type: string;
+          };
+          ip_type: string;
+          region: string;
+        };
+      };
+      origin: {
+        type: string;
+        data: {
+          agent_id: string;
+          agent_name: string;
+          local_ip: string;
+          local_port: number /* int */;
+        };
+      };
+      domain: any;
+      firewall_id: any;
+      ratelimit: {
+        bytes_per_second: any;
+        packets_per_second: any;
+      };
+      active: boolean;
+      disabled_reason: any;
+      region: string;
+      expire_notice: any;
+      proxy_protocol: any;
+      hostname_verify_level: string;
+      agent_over_limit: boolean;
+    }[];
+    tcp_alloc: {
+      allowed: number /* int */;
+      claimed: number /* int */;
+      desired: number /* int */;
+    };
+    udp_alloc: {
+      allowed: number /* int */;
+      claimed: number /* int */;
+      desired: number /* int */;
+    };
+  };
+}
+export interface AgentRunData {
+  status: string;
+  data: {
+    agent_id: string;
+    agent_type: string;
+    account_status: string;
+    tunnels: {
+      id: string;
+      internal_id: number /* int */;
+      name: string;
+      ip_num: number /* int */;
+      region_num: number /* int */;
+      port: {
+        from: number /* int */;
+        to: number /* int */;
+      };
+      proto: string;
+      local_ip: string;
+      local_port: number /* int */;
+      tunnel_type: string;
+      assigned_domain: string;
+      custom_domain: any;
+      disabled: any;
+      proxy_protocol: any;
+      agent_config: {
+        fields: {
+          name: string;
+          value: string;
+        }[];
+      };
+    }[];
+    pending: any[];
+    account_features: {
+      regional_tunnels: boolean;
+    };
+  };
+}
+export interface CreateTunnelRequest {
+  name: string;
+  tunnel_type: string;
+  port_type: string;
+  port_count: number /* int */;
+  origin: TunnelOrigin;
+  enabled: boolean;
+}
+export interface TunnelOrigin {
+  type: string;
+  data: TunnelOriginData;
+}
+export interface TunnelOriginData {
+  agent_id: string;
+  local_ip: string;
+  local_port: number /* int */;
+}

@@ -12,6 +12,7 @@ import (
 
 	"rexon/config"
 	"rexon/filemanager"
+	"rexon/playit"
 	"rexon/process"
 	"rexon/sql"
 	"rexon/types"
@@ -752,6 +753,287 @@ func HandleFileManagerExtract(ctx *gin.Context) {
 	}
 
 	ctx.JSON(200, gin.H{"status": "extracted", "to": dstRel})
+}
+
+func HandleListTunnel(ctx *gin.Context) {
+	if !utils.VerifyMe(ctx) {
+		return
+	}
+	tunnelId := ctx.Query("tunnel")
+	var client = playit.NewClient(sql.GetValue("playit_secret"))
+	var data []byte
+	var err error
+	if tunnelId != "" {
+		data, err = client.ListTunnels(tunnelId, sql.GetValue("playit_agent_id"))
+	} else {
+		data, err = client.ListTunnels(nil, sql.GetValue("playit_agent_id"))
+	}
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	var unified types.Tunnel
+	json.Unmarshal(data, &unified)
+	ctx.JSON(200, unified)
+
+}
+
+func HandleQueryRegion(ctx *gin.Context) {
+	if !utils.VerifyMe(ctx) {
+		return
+	}
+	var client = playit.NewClient(sql.GetValue("playit_secret"))
+	var data []byte
+	var err error
+
+	data, err = client.QueryRegion(nil)
+
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	var unified any
+	json.Unmarshal(data, &unified)
+	ctx.JSON(200, unified)
+
+}
+
+type CreateTunnelReq struct {
+	Name       string `json:"name" binding:"required"`
+	TunnelType string `json:"tunnel_type" binding:"required"`
+	PortType   string `json:"port_type" binding:"required"`
+	PortCount  int    `json:"port_count" binding:"required"`
+	Port       int    `json:"port" binding:"required"`
+}
+
+/*
+func HandleCreateTunnel(ctx *gin.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": fmt.Sprintf("panic: %v", r),
+			})
+		}
+	}()
+
+	if ctx.Request.Body == nil {
+		ctx.JSON(400, gin.H{"error": "empty request body"})
+		return
+	}
+
+	var body map[string]interface{}
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.JSON(400, gin.H{"error": "invalid JSON"})
+		return
+	}
+
+	ctx.Set("rawBody", body)
+
+	if !utils.VerifyMe(ctx) {
+		return
+	}
+
+	client := playit.NewClient(sql.GetValue("playit_secret"))
+
+	data, err := client.CreateTunnel(
+		body.Name,
+		body.TunnelType,
+		body.PortType,
+		body.PortCount,
+		sql.GetValue("playit_agent_id"),
+		"0.0.0.0",
+		body.Port,
+		true,
+	)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	var unified any
+	_ = json.Unmarshal(data, &unified)
+	ctx.JSON(200, unified)
+	}*/
+
+func HandleCreateTunnel(ctx *gin.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": fmt.Sprintf("panic: %v", r),
+			})
+		}
+	}()
+
+	if ctx.Request.Body == nil {
+		ctx.JSON(400, gin.H{"error": "empty request body"})
+		return
+	}
+
+	var body map[string]interface{}
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.JSON(400, gin.H{"error": "invalid JSON"})
+		return
+	}
+
+	ctx.Set("rawBody", body)
+
+	if !utils.VerifyMe(ctx) {
+		return
+	}
+
+	client := playit.NewClient(sql.GetValue("playit_secret"))
+
+	name, ok := body["name"].(string)
+	if !ok {
+		ctx.JSON(400, gin.H{"error": "name must be string"})
+		return
+	}
+
+	tunnelType, ok := body["tunnel_type"].(string)
+	if !ok {
+		ctx.JSON(400, gin.H{"error": "tunnel_type must be string"})
+		return
+	}
+
+	portType, ok := body["port_type"].(string)
+	if !ok {
+		ctx.JSON(400, gin.H{"error": "port_type must be string"})
+		return
+	}
+
+	portCountFloat, ok := body["port_count"].(float64)
+	if !ok {
+		ctx.JSON(400, gin.H{"error": "port_count must be number"})
+		return
+	}
+	portCount := int(portCountFloat)
+
+	portFloat, ok := body["port"].(float64)
+	if !ok {
+		ctx.JSON(400, gin.H{"error": "port must be number"})
+		return
+	}
+	port := int(portFloat)
+
+	data, err := client.CreateTunnel(
+		name,
+		tunnelType,
+		portType,
+		portCount,
+		sql.GetValue("playit_agent_id"),
+		"0.0.0.0",
+		port,
+		true,
+	)
+
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	var unified any
+	json.Unmarshal(data, &unified)
+	ctx.JSON(200, unified)
+}
+
+func HandleTunnelDelete(ctx *gin.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": fmt.Sprintf("panic: %v", r),
+			})
+		}
+	}()
+
+	if ctx.Request.Body == nil {
+		ctx.JSON(400, gin.H{"error": "empty request body"})
+		return
+	}
+
+	var body map[string]interface{}
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.JSON(400, gin.H{"error": "invalid JSON"})
+		return
+	}
+
+	ctx.Set("rawBody", body)
+
+	if !utils.VerifyMe(ctx) {
+		return
+	}
+	tunnelId := body["tunnel_id"].(string)
+	client := playit.NewClient(sql.GetValue("playit_secret"))
+	data, err := client.DeleteTunnel(tunnelId)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	var unified any
+	json.Unmarshal(data, &unified)
+	ctx.JSON(200, unified)
+}
+
+func HandleUpdateTunnel(ctx *gin.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": fmt.Sprintf("panic: %v", r),
+			})
+		}
+	}()
+
+	if ctx.Request.Body == nil {
+		ctx.JSON(400, gin.H{"error": "empty request body"})
+		return
+	}
+
+	var body map[string]interface{}
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.JSON(400, gin.H{"error": "invalid JSON"})
+		return
+	}
+
+	ctx.Set("rawBody", body)
+
+	if !utils.VerifyMe(ctx) {
+		return
+	}
+
+	client := playit.NewClient(sql.GetValue("playit_secret"))
+
+	tunnelid, ok := body["tunnel_id"].(string)
+	if !ok {
+		ctx.JSON(400, gin.H{"error": "tunnel_id must be string"})
+		return
+	}
+
+	enabled, ok := body["enabled"].(bool)
+	if !ok {
+		ctx.JSON(400, gin.H{"error": "name must be string"})
+		return
+	}
+
+	portFloat, ok := body["port"].(float64)
+	if !ok {
+		ctx.JSON(400, gin.H{"error": "port must be number"})
+		return
+	}
+	port := int(portFloat)
+
+	data, err := client.UpdateTunnel(
+		tunnelid,
+		"0.0.0.0",
+		port,
+		sql.GetValue("playit_agent_id"),
+		enabled,
+	)
+
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	var unified any
+	json.Unmarshal(data, &unified)
+	ctx.JSON(200, unified)
 }
 
 func HandleConfig(ctx *gin.Context) {

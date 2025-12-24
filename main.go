@@ -20,6 +20,7 @@ import (
 	"rexon/filemanager"
 	"rexon/filemanager/ftp"
 	"rexon/handlers"
+	"rexon/playit"
 	"rexon/setup"
 	"rexon/sql"
 	"rexon/types"
@@ -149,14 +150,14 @@ func startPlayit() {
 		panic("Playit is not setup \n please setup it by adding setup -skip-to=3")
 	}
 	cmd := exec.Command(sql.GetValue("playit_path"), "--secret", sql.GetValue("playit_secret"))
-	cmd.Stdout = &MyWriter{
+	/*cmd.Stdout = &MyWriter{
 		Prefix: "PLAYIT",
 		Color:  color.New(color.FgGreen),
 	}
 	cmd.Stderr = &MyWriter{
 		Prefix: "PLAYIT",
 		Color:  color.New(color.FgRed),
-	}
+		}*/
 
 	if err := cmd.Start(); err != nil {
 		panic(err)
@@ -241,6 +242,14 @@ func runServer() {
 		fGroup.POST("/compress", handlers.HandleFileManagerCompress)
 		fGroup.POST("/extract", handlers.HandleFileManagerExtract)
 	}
+	playitGroup := r.Group("playit")
+	{
+		playitGroup.GET("/tunnel/list", handlers.HandleListTunnel)
+		playitGroup.GET("/region/query", handlers.HandleQueryRegion)
+		playitGroup.POST("/tunnel/create", handlers.HandleCreateTunnel)
+		playitGroup.DELETE("/tunnel/delete", handlers.HandleTunnelDelete)
+		playitGroup.PATCH("/tunnel/update", handlers.HandleUpdateTunnel)
+	}
 
 	srv := &http.Server{
 		Addr:    env.WebListenOn,
@@ -312,5 +321,19 @@ func main() {
 				setup.Setup(count)
 			},
 		)
+		commander.Map("test", "test", "test", func(args objx.Map) {
+			sql.Init("./data.rexon")
+			defer sql.Close()
+			fmt.Println(sql.GetValue("playit_secret"))
+			fmt.Println(sql.GetValue("playit_agent_id"))
+			client := playit.NewClient(sql.GetValue("playit_secret"))
+			//client.CreateTunnel("")
+			// CreateTunnel(name string, tunnelType string, portType string, portCount int, agentID string, localIP string, localPort int, enabled bool
+			data, err := client.ListTunnels(nil, "30d5e759-16ca-40fd-9006-a4632cce710e")
+			if err != nil {
+				fmt.Println(err)
+			}
+			fmt.Println(string(data))
+		})
 	})
 }
