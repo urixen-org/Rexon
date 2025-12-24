@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -225,11 +227,25 @@ func main() {
 			},
 		)
 		commander.Map(
-			"setup",
+			"setup [-skip-to=(int)]",
 			"Setup",
 			"Setup Rexon",
 			func(args objx.Map) {
-				setup.Setup()
+				count := 0
+				if v, ok := args["-skip-to"]; ok {
+					str := v.(string)
+					if strings.Contains(str, "=") {
+						parts := strings.SplitN(str, "=", 2)
+						str = parts[1]
+					}
+					n, err := strconv.Atoi(str)
+					if err != nil {
+						fmt.Println("Invalid number for -skip-to:", str)
+					} else {
+						count = n
+					}
+				}
+				setup.Setup(count)
 			},
 		)
 	})
