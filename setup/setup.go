@@ -200,7 +200,7 @@ func ClaimCode(playitPath string, claimCode, agentType, version string) playit.U
 			fmt.Println("Claim accepted")
 			var unified playit.UnifiedResponse
 			data, _ := client.ExchangeClaim(claimCode)
-			fmt.Println(string(data))
+			//fmt.Println(string(data))
 			json.Unmarshal(data, &unified)
 			_, _ = client.RegisterProto("linux", version, false, false, 1, "0.0.0.0:4000", "0.0.0.0:4001")
 			//cmd := exec.Command(playitPath, "--secret", unified.Data.SecretKey)

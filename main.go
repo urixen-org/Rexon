@@ -7,7 +7,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
@@ -100,6 +102,67 @@ func runNgrok(env *config.Env, handler http.Handler, ngrokCh chan<- string) {
 	}()
 }
 
+type MyWriter struct {
+	Prefix   string
+	Color    *color.Color
+	lastLine string
+}
+
+var ansi = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
+
+func (w *MyWriter) Write(p []byte) (int, error) {
+	c := w.Color
+	if c == nil {
+		c = color.New(color.FgWhite)
+	}
+
+	output := strings.TrimSpace(cleanANSI(string(p)))
+	if output == "" {
+		return len(p), nil
+	}
+
+	// Skip printing if it's identical to the last line
+	if output == w.lastLine {
+		return len(p), nil
+	}
+	w.lastLine = output
+
+	skipKeywords := []string{"0 tunnels registered"}
+
+	for _, kw := range skipKeywords {
+		if strings.Contains(output, kw) {
+			return len(p), nil
+		}
+	}
+
+	ts := time.Now().Format("15:04:05")
+	c.Printf("[%s] %s: %s\n", ts, w.Prefix, output+"\n")
+	return len(p), nil
+}
+
+func cleanANSI(input string) string {
+	return ansi.ReplaceAllString(input, "")
+}
+
+func startPlayit() {
+	if sql.GetValue("playit_path") == "" || sql.GetValue("playit_secret") == "" {
+		panic("Playit is not setup \n please setup it by adding setup -skip-to=3")
+	}
+	cmd := exec.Command(sql.GetValue("playit_path"), "--secret", sql.GetValue("playit_secret"))
+	cmd.Stdout = &MyWriter{
+		Prefix: "PLAYIT",
+		Color:  color.New(color.FgGreen),
+	}
+	cmd.Stderr = &MyWriter{
+		Prefix: "PLAYIT",
+		Color:  color.New(color.FgRed),
+	}
+
+	if err := cmd.Start(); err != nil {
+		panic(err)
+	}
+}
+
 func runServer() {
 	flag.Parse()
 	limit = ratelimit.New(*rps)
@@ -117,6 +180,7 @@ func runServer() {
 	ancii.Print(env.WebListenOn, env.FTPHost+":"+fmt.Sprint(env.FTPPort), env.FTPUser, sql.GetValue("passcode"))
 
 	go ftp.Start()
+	startPlayit()
 
 	route := gin.New()
 	r := route.Group("/api")
