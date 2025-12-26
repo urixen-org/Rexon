@@ -18,6 +18,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@shadcn": path.resolve(__dirname, "./src/components"),
       "types": path.resolve(__dirname, "./types")
     },
   },

@@ -1,0 +1,105 @@
+{
+  "schema": 1,
+  "name": "Minecraft server software registry",
+  "description": "Central registry of Minecraft server software and their APIs for the Rexon panel (urixen-org)",
+  "author": "nehxurai <samirthegamer717@gmail.com>",
+  "license": "MIT<https://opensource.org/license/mit>",
+  "softwares": [
+    {
+      "id": "vanilla",
+      "name": "Vanilla",
+      "description": "Official Minecraft server",
+      "provider": "mojang",
+      "type": "VANILLA",
+      "api": {
+        "versions": {
+          "url": "https://mcjars.app/api/v2/builds/{{software}}",
+          "fields": ["projectVersionId", "versionId"]
+        },
+        "build": {
+          "url": "https://mcjars.app/api/v2/builds/{{software}}/{{version}}",
+          "fields": [
+            "id",
+            "type",
+            "projectVersionId",
+            "versionId",
+            "name",
+            "experimental",
+            "created",
+            "changes",
+            "installation"
+          ]
+        }
+      },
+      "mapping": {
+        "software": "{{software.id}}",
+        "version": "versionId",
+        "build": "installation"
+      }
+    },
+    {
+      "id": "paper",
+      "name": "Paper",
+      "description": "High-performance Spigot fork with optimizations",
+      "provider": "papermc",
+      "type": "PAPER",
+      "api": {
+        "versions": {
+          "url": "https://mcjars.app/api/v2/builds/{{software}}",
+          "fields": ["projectVersionId", "versionId"]
+        },
+        "build": {
+          "url": "https://mcjars.app/api/v2/builds/{{software}}/{{version}}",
+          "fields": [
+            "id",
+            "type",
+            "projectVersionId",
+            "versionId",
+            "name",
+            "experimental",
+            "created",
+            "changes",
+            "installation"
+          ]
+        }
+      },
+      "mapping": {
+        "software": "{{software.id}}",
+        "version": "versionId",
+        "build": "installation"
+      }
+    },
+    {
+      "id": "fabric",
+      "name": "Fabric",
+      "description": "Lightweight modded Minecraft server",
+      "provider": "fabricmc",
+      "type": "FABRIC",
+      "api": {
+        "versions": {
+          "url": "https://mcjars.app/api/v2/builds/{{software}}",
+          "fields": ["projectVersionId", "versionId"]
+        },
+        "build": {
+          "url": "https://mcjars.app/api/v2/builds/{{software}}/{{version}}",
+          "fields": [
+            "id",
+            "type",
+            "projectVersionId",
+            "versionId",
+            "name",
+            "experimental",
+            "created",
+            "changes",
+            "installation"
+          ]
+        }
+      },
+      "mapping": {
+        "software": "{{software.id}}",
+        "version": "versionId",
+        "build": "installation"
+      }
+    }
+  ]
+}

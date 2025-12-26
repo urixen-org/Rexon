@@ -582,6 +582,46 @@ func HandleFileManagerCreateDir(ctx *gin.Context) {
 	ctx.JSON(200, gin.H{"status": "directory created"})
 }
 
+func HandleSoftwareInstall(ctx *gin.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": fmt.Sprintf("panic: %v", r),
+			})
+		}
+	}()
+
+	if ctx.Request.Body == nil {
+		ctx.JSON(400, gin.H{"error": "empty request body"})
+		return
+	}
+
+	var body map[string]interface{}
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.JSON(400, gin.H{"error": "invalid JSON"})
+		return
+	}
+
+	ctx.Set("rawBody", body)
+
+	/*if !utils.VerifyMe(ctx) {
+	return
+	}*/
+
+	url := fmt.Sprintf("%v", body["url"])
+
+	if url == "" {
+		ctx.JSON(400, gin.H{"error": "url is required"})
+		return
+	}
+	if err := utils.DownloadFile(config.LoadEnv().ServerFolder+"/server.jar", url); err != nil {
+		ctx.JSON(400, gin.H{"error": err})
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, types.MsgFormat{Status: "success", Payload: "The server software downloaded successfully as server.jar"})
+}
+
 func HandleFileManagerMetadata(ctx *gin.Context) {
 	if !utils.VerifyMe(ctx) {
 		return
@@ -778,6 +818,21 @@ func HandleListTunnel(ctx *gin.Context) {
 
 }
 
+func HandleAgentRunData(ctx *gin.Context) {
+	if !utils.VerifyMe(ctx) {
+		return
+	}
+	var client = playit.NewClient(sql.GetValue("playit_secret"))
+	data, err := client.GetAgentRunData()
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	var unified types.AgentRunData
+	json.Unmarshal(data, &unified)
+	ctx.JSON(200, unified)
+}
+
 func HandleQueryRegion(ctx *gin.Context) {
 	if !utils.VerifyMe(ctx) {
 		return
@@ -805,55 +860,6 @@ type CreateTunnelReq struct {
 	PortCount  int    `json:"port_count" binding:"required"`
 	Port       int    `json:"port" binding:"required"`
 }
-
-/*
-func HandleCreateTunnel(ctx *gin.Context) {
-	defer func() {
-		if r := recover(); r != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": fmt.Sprintf("panic: %v", r),
-			})
-		}
-	}()
-
-	if ctx.Request.Body == nil {
-		ctx.JSON(400, gin.H{"error": "empty request body"})
-		return
-	}
-
-	var body map[string]interface{}
-	if err := ctx.ShouldBindJSON(&body); err != nil {
-		ctx.JSON(400, gin.H{"error": "invalid JSON"})
-		return
-	}
-
-	ctx.Set("rawBody", body)
-
-	if !utils.VerifyMe(ctx) {
-		return
-	}
-
-	client := playit.NewClient(sql.GetValue("playit_secret"))
-
-	data, err := client.CreateTunnel(
-		body.Name,
-		body.TunnelType,
-		body.PortType,
-		body.PortCount,
-		sql.GetValue("playit_agent_id"),
-		"0.0.0.0",
-		body.Port,
-		true,
-	)
-	if err != nil {
-		ctx.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-
-	var unified any
-	_ = json.Unmarshal(data, &unified)
-	ctx.JSON(200, unified)
-	}*/
 
 func HandleCreateTunnel(ctx *gin.Context) {
 	defer func() {

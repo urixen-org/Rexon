@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from "react";
 import FileManager from "@/pages/filemanager";
 import Console from "@/pages/Console";
+import Playit from "@/pages/Playit"
+import Software from "@/pages/Software";
 
 type Route = {
   path: string;
@@ -11,6 +13,8 @@ type Route = {
 const routes: Route[] = [];
 routes.push({ path: "/file-manager", element: <FileManager /> });
 routes.push({ path: "/", element: <Console /> });
+routes.push({ path: "/playit", element: <Playit />})
+routes.push({ path: "/software", element: <Software />})
 
 export function Router() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);

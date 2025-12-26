@@ -124,6 +124,14 @@ export interface CreateTunnelRequest {
   origin: TunnelOrigin;
   enabled: boolean;
 }
+export interface CreateTunnelReq {
+  name: string;
+  tunnel_type: string;
+  port_type: string;
+  port_count: number /* int */;
+  port: number /* int */;
+  passcode: string;
+}
 export interface TunnelOrigin {
   type: string;
   data: TunnelOriginData;
@@ -132,4 +140,10 @@ export interface TunnelOriginData {
   agent_id: string;
   local_ip: string;
   local_port: number /* int */;
+}
+export interface TunnelCreationResponse {
+  data: {
+    id: string;
+  };
+  status: string;
 }

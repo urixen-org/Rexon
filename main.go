@@ -150,14 +150,14 @@ func startPlayit() {
 		panic("Playit is not setup \n please setup it by adding setup -skip-to=3")
 	}
 	cmd := exec.Command(sql.GetValue("playit_path"), "--secret", sql.GetValue("playit_secret"))
-	/*cmd.Stdout = &MyWriter{
+	cmd.Stdout = &MyWriter{
 		Prefix: "PLAYIT",
 		Color:  color.New(color.FgGreen),
 	}
 	cmd.Stderr = &MyWriter{
 		Prefix: "PLAYIT",
 		Color:  color.New(color.FgRed),
-		}*/
+	}
 
 	if err := cmd.Start(); err != nil {
 		panic(err)
@@ -225,6 +225,7 @@ func runServer() {
 	})
 	r.GET("/config", handlers.HandleConfig)
 	r.POST("/config", handlers.HandleConfigUpdate)
+	r.POST("/software", handlers.HandleSoftwareInstall)
 
 	fGroup := r.Group("/filemanager")
 	fGroup.Use(validatePath())
@@ -246,6 +247,7 @@ func runServer() {
 	{
 		playitGroup.GET("/tunnel/list", handlers.HandleListTunnel)
 		playitGroup.GET("/region/query", handlers.HandleQueryRegion)
+		playitGroup.GET("/agent/rundata", handlers.HandleAgentRunData)
 		playitGroup.POST("/tunnel/create", handlers.HandleCreateTunnel)
 		playitGroup.DELETE("/tunnel/delete", handlers.HandleTunnelDelete)
 		playitGroup.PATCH("/tunnel/update", handlers.HandleUpdateTunnel)

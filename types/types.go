@@ -126,6 +126,16 @@ type CreateTunnelRequest struct {
 	Origin     TunnelOrigin `json:"origin"`
 	Enabled    bool         `json:"enabled"`
 }
+
+type CreateTunnelReq struct {
+	Name       string `json:"name" binding:"required"`
+	TunnelType string `json:"tunnel_type" binding:"required"`
+	PortType   string `json:"port_type" binding:"required"`
+	PortCount  int    `json:"port_count" binding:"required"`
+	Port       int    `json:"port" binding:"required"`
+	Passcode   string `json:"passcode"`
+}
+
 type TunnelOrigin struct {
 	Type string           `json:"type"`
 	Data TunnelOriginData `json:"data"`

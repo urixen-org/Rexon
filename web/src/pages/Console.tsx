@@ -8,6 +8,7 @@ import { usePasscode } from "@/lib/Passcode";
 import { SidebarToggle } from "@/components/sidebar-toggle";
 import { Check, ChevronRight, CircleStop } from "lucide-react";
 import { LogViewer } from "@/components/terminal";
+import { http } from "@/lib/http";
 
 function App() {
   const [stat, setStat] = useState<MsgFormat>();
@@ -32,54 +33,45 @@ function App() {
   };
 
   useEffect(() => {
-    fetch("/api/ping")
-      .then((res) => res.json())
-      .then((data: MsgFormat) => {
+    http
+      .get<MsgFormat>("/ping")
+      .then(({ data }) => {
         setStat(data);
         toast(data.status);
       })
-      .catch(() => {
-        toast("error fetching status");
-      });
+      .catch(() => toast("error fetching status"));
 
-    fetch("/api/status", {
-      method: "POST",
-      body: JSON.stringify({ passcode: passcode }),
-    })
-      .then((res) => res.json())
-      .then((data: { running: boolean; sessionID: string }) => {
+    http
+      .post<{ running: boolean; sessionID: string }>("/status", {
+        passcode,
+      })
+      .then(({ data }) => {
         setIsRunning(data.running);
       })
-      .catch(() => {
-        toast("error fetching status");
-      });
+      .catch(() => toast("error fetching status"));
 
     if (isRunning) {
       ws.current = new WebSocket("ws://localhost:8080/api/ws");
+
       ws.current.onopen = () => {
         toast("WebSocket connected");
-        // @ts-expect-error what did you meant by possibly null?
-        ws.current.send(JSON.stringify({ passcode: passcode }));
+        ws.current?.send(JSON.stringify({ passcode }));
       };
+
       ws.current.onmessage = handleWsMessage;
       ws.current.onclose = () => console.log("WebSocket closed");
-      ws.current.onerror = (error) => console.error(error);
+      ws.current.onerror = (err) => console.error(err);
     }
 
     return () => {
-      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-        ws.current.close();
-      }
+      ws.current?.close();
     };
-  }, [isRunning]);
+  }, [isRunning, passcode]);
 
   const startService = () => {
-    fetch("/api/start", {
-      method: "POST",
-      body: JSON.stringify({ passcode: passcode }),
-    })
-      .then((res) => res.json())
-      .then((data: MsgFormat) => {
+    http
+      .post<MsgFormat>("/start", { passcode })
+      .then(({ data }) => {
         setStat(data);
         setIsRunning(true);
         toast(data.status);
@@ -88,16 +80,13 @@ function App() {
   };
 
   const stopService = () => {
-    fetch("/api/stop", {
-      method: "POST",
-      body: JSON.stringify({ passcode: passcode }),
-    })
-      .then((res) => res.json())
-      .then((data: MsgFormat) => {
+    http
+      .post<MsgFormat>("/stop", { passcode })
+      .then(({ data }) => {
         setStat(data);
         setIsRunning(false);
-        toast(data.status);
         setCmd("");
+        toast(data.status);
       })
       .catch(() => toast("error stopping service"));
   };
@@ -181,7 +170,7 @@ function App() {
               const tokens = trimmed.split(/\s+/);
               const lastToken = tokens.pop() || "";
               const nextSuggestions = getSuggestions(tokens).filter((s) =>
-                s.startsWith(lastToken)
+                s.startsWith(lastToken),
               );
               setSuggestions(nextSuggestions);
             }}
