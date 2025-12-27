@@ -11,7 +11,7 @@ import (
 	"github.com/midnightfreddie/nbt2json"
 )
 
-func readPlayerFile(filePath string) (map[string]interface{}, error) {
+func ReadPlayerFile(filePath string) (map[string]interface{}, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func readPlayerFile(filePath string) (map[string]interface{}, error) {
 
 func LoadPlayer(worldPath, uuid string) (map[string]interface{}, error) {
 	playerFile := filepath.Join(worldPath, "playerdata", uuid+".dat")
-	return readPlayerFile(playerFile)
+	return ReadPlayerFile(playerFile)
 }
 
 func LoadAllPlayers(worldPath string) ([]map[string]interface{}, error) {
@@ -64,7 +64,7 @@ func LoadAllPlayers(worldPath string) ([]map[string]interface{}, error) {
 			continue
 		}
 
-		data, err := readPlayerFile(filepath.Join(dir, f.Name()))
+		data, err := ReadPlayerFile(filepath.Join(dir, f.Name()))
 		if err != nil {
 			fmt.Printf("Failed to load %s: %v\n", f.Name(), err)
 			continue

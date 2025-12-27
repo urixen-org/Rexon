@@ -13,5 +13,5 @@ export interface CreateTunnelReq {
 export interface Player {
   uuid: string;
   name: string;
-  expiresOn: number /* int64 */;
+  expiresOn: string;
 }

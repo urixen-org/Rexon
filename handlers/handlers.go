@@ -13,6 +13,7 @@ import (
 
 	"rexon/config"
 	"rexon/filemanager"
+	"rexon/mc"
 	"rexon/playit"
 	"rexon/process"
 	"rexon/sql"
@@ -1046,7 +1047,7 @@ func HandleUpdateTunnel(ctx *gin.Context) {
 type Player struct {
 	UUID      string `json:"uuid"`
 	Name      string `json:"name"`
-	ExpiresOn int64  `json:"expiresOn"`
+	ExpiresOn string `json:"expiresOn"`
 }
 
 func HandleGetAllPlayer(ctx *gin.Context) {
@@ -1083,8 +1084,14 @@ func HandleGetPlayerData(ctx *gin.Context) {
 	if !utils.VerifyMe(ctx) {
 		return
 	}
-	serverdir := config.LoadEnv().ServerFolder
-	name := ctx.Param("UUID")
+	world := config.LoadEnv().ServerFolder + "/world"
+	uuid := ctx.Param("UUID")
+	resp, err := mc.LoadPlayer(world, uuid)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusFound, resp)
 }
 
 func HandleConfig(ctx *gin.Context) {
