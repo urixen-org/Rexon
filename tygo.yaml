@@ -1,3 +1,9 @@
 packages:
   - path: "rexon/types"
     output_path: "web/types"
+  - path: "rexon/mc"
+    output_path: "web/types/mc"
+  - path: "rexon/handlers"
+    output_path: "web/types/handlers"
+  - path: "rexon/filemanager"
+    output_path: "web/types/filemanager"

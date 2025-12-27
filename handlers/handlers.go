@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -1040,6 +1041,50 @@ func HandleUpdateTunnel(ctx *gin.Context) {
 	var unified any
 	json.Unmarshal(data, &unified)
 	ctx.JSON(200, unified)
+}
+
+type Player struct {
+	UUID      string `json:"uuid"`
+	Name      string `json:"name"`
+	ExpiresOn int64  `json:"expiresOn"`
+}
+
+func HandleGetAllPlayer(ctx *gin.Context) {
+	if !utils.VerifyMe(ctx) {
+		return
+	}
+	serverdir := config.LoadEnv().ServerFolder
+	filePath := filepath.Join(serverdir, "usercache.json")
+
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "failed to read usercache.json",
+			"msg":   err.Error(),
+		})
+		return
+	}
+
+	var players []Player
+	if err := json.Unmarshal(data, &players); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "failed to parse JSON",
+			"msg":   err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"players": players,
+	})
+}
+
+func HandleGetPlayerData(ctx *gin.Context) {
+	if !utils.VerifyMe(ctx) {
+		return
+	}
+	serverdir := config.LoadEnv().ServerFolder
+	name := ctx.Param("UUID")
 }
 
 func HandleConfig(ctx *gin.Context) {

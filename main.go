@@ -226,6 +226,8 @@ func runServer() {
 	r.GET("/config", handlers.HandleConfig)
 	r.POST("/config", handlers.HandleConfigUpdate)
 	r.POST("/software", handlers.HandleSoftwareInstall)
+	r.GET("/players", handlers.HandleGetAllPlayer)
+	r.GET("/players/:UUID", handlers.HandleGetPlayerData)
 
 	fGroup := r.Group("/filemanager")
 	fGroup.Use(validatePath())
