@@ -235,6 +235,8 @@ func runServer() {
 		player.DELETE("/:UUID/ban", handlers.HandlePlayerUnban)
 
 		player.POST("/:UUID/whitelist", handlers.HandlePlayerWhitelist)
+		player.DELETE("/:UUID/whitelist", handlers.HandlePlayerUnwhitelist)
+
 	}
 
 	fGroup := r.Group("/filemanager")

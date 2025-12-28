@@ -1094,7 +1094,47 @@ func requireUUID(ctx *gin.Context) (string, bool) {
 	return uuid, true
 }
 
+func panicGuard(ctx *gin.Context) {
+	if r := recover(); r != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("panic: %v", r),
+		})
+	}
+}
+
+func bindRawBody(ctx *gin.Context) map[string]interface{} {
+	if ctx.Request.Body != nil {
+		var body map[string]interface{}
+		_ = ctx.ShouldBindJSON(&body)
+		ctx.Set("rawBody", body)
+		return body
+	}
+	return nil
+}
+
+type BanInfo struct {
+	UUID    string `json:"uuid"`
+	Name    string `json:"name"`
+	Created string `json:"created"`
+	Source  string `json:"source"`
+	Expires string `json:"expires"`
+	Reason  string `json:"reason"`
+}
+
+type WhitelistInfo struct {
+	UUID string `json:"uuid"`
+	Name string `json:"name"`
+}
+
+type OppedInfo struct {
+	UUID                string `json:"uuid"`
+	Name                string `json:"name"`
+	Level               int    `json:"level"`
+	BypassesPlayerLimit bool   `json:"bypassesPlayerLimit"`
+}
+
 func HandleGetPlayerData(ctx *gin.Context) {
+	bindRawBody(ctx)
 	if !utils.VerifyMe(ctx) {
 		return
 	}
@@ -1114,15 +1154,21 @@ func HandleGetPlayerData(ctx *gin.Context) {
 	}
 
 	isBanned, banInfo, _ := mc.ExistsByUUID(base+"/banned-players.json", uuid)
-	isWhitelisted, _, _ := mc.ExistsByUUID(base+"/whitelist.json", uuid)
-	isOpped, _, _ := mc.ExistsByUUID(base+"/ops.json", uuid)
-
 	player["is_banned"] = isBanned
-	player["is_whitelisted"] = isWhitelisted
-	player["is_opped"] = isOpped
-
 	if isBanned {
 		player["ban_info"] = banInfo
+	}
+
+	isWhitelisted, whitelistInfo, _ := mc.ExistsByUUID(base+"/whitelist.json", uuid)
+	player["is_whitelisted"] = isWhitelisted
+	if isWhitelisted {
+		player["whitelist_info"] = whitelistInfo
+	}
+
+	isOpped, oppInfo, _ := mc.ExistsByUUID(base+"/ops.json", uuid)
+	player["is_opped"] = isOpped
+	if isOpped {
+		player["opped_info"] = oppInfo
 	}
 
 	ctx.JSON(200, player)
@@ -1130,7 +1176,7 @@ func HandleGetPlayerData(ctx *gin.Context) {
 
 func HandlePlayerBan(ctx *gin.Context) {
 	defer panicGuard(ctx)
-
+	body := bindRawBody(ctx)
 	if !utils.VerifyMe(ctx) {
 		return
 	}
@@ -1140,23 +1186,31 @@ func HandlePlayerBan(ctx *gin.Context) {
 		return
 	}
 
-	var body map[string]interface{}
-	if err := ctx.ShouldBindJSON(&body); err != nil {
-		ctx.JSON(400, gin.H{"error": "invalid JSON"})
-		return
-	}
-
 	env := config.LoadEnv()
 	path := env.ServerFolder + "/banned-players.json"
-
 	arr, err := mc.ReadJSONArray(path)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
-	body["uuid"] = uuid
-	arr = append(arr, body)
+	data := BanInfo{
+		UUID:    uuid,
+		Name:    fmt.Sprintf("%v", body["name"]),
+		Created: time.Now().Format("2006-01-02 15:04:05 -0700"),
+		Source:  "Rexon",
+		Expires: "forever",
+		Reason:  fmt.Sprintf("%v", body["reason"]),
+	}
+
+	arr = append(arr, map[string]interface{}{
+		"uuid":    data.UUID,
+		"name":    data.Name,
+		"created": data.Created,
+		"source":  data.Source,
+		"expires": data.Expires,
+		"reason":  data.Reason,
+	})
 
 	if err := mc.WriteJSONArray(path, arr); err != nil {
 		ctx.JSON(500, gin.H{"error": err.Error()})
@@ -1168,7 +1222,7 @@ func HandlePlayerBan(ctx *gin.Context) {
 
 func HandlePlayerUnban(ctx *gin.Context) {
 	defer panicGuard(ctx)
-
+	bindRawBody(ctx)
 	if !utils.VerifyMe(ctx) {
 		return
 	}
@@ -1189,7 +1243,7 @@ func HandlePlayerUnban(ctx *gin.Context) {
 
 func HandlePlayerWhitelist(ctx *gin.Context) {
 	defer panicGuard(ctx)
-
+	body := bindRawBody(ctx)
 	if !utils.VerifyMe(ctx) {
 		return
 	}
@@ -1199,23 +1253,23 @@ func HandlePlayerWhitelist(ctx *gin.Context) {
 		return
 	}
 
-	var body map[string]interface{}
-	if err := ctx.ShouldBindJSON(&body); err != nil {
-		ctx.JSON(400, gin.H{"error": "invalid JSON"})
-		return
-	}
-
 	env := config.LoadEnv()
 	path := env.ServerFolder + "/whitelist.json"
-
 	arr, err := mc.ReadJSONArray(path)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
-	body["uuid"] = uuid
-	arr = append(arr, body)
+	data := WhitelistInfo{
+		UUID: uuid,
+		Name: fmt.Sprintf("%v", body["name"]),
+	}
+
+	arr = append(arr, map[string]interface{}{
+		"uuid": data.UUID,
+		"name": data.Name,
+	})
 
 	if err := mc.WriteJSONArray(path, arr); err != nil {
 		ctx.JSON(500, gin.H{"error": err.Error()})
@@ -1225,14 +1279,26 @@ func HandlePlayerWhitelist(ctx *gin.Context) {
 	ctx.JSON(200, gin.H{"success": true})
 }
 
-func panicGuard(ctx *gin.Context) {
-	if r := recover(); r != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": fmt.Sprintf("panic: %v", r),
-		})
+func HandlePlayerUnwhitelist(ctx *gin.Context) {
+	defer panicGuard(ctx)
+	bindRawBody(ctx)
+	if !utils.VerifyMe(ctx) {
+		return
 	}
-}
 
+	uuid, ok := requireUUID(ctx)
+	if !ok {
+		return
+	}
+
+	env := config.LoadEnv()
+	if err := mc.RemoveByUUID(env.ServerFolder+"/whitelist.json", uuid); err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(200, gin.H{"success": true})
+}
 func HandleConfig(ctx *gin.Context) {
 	if !utils.VerifyMe(ctx) {
 		return
