@@ -14,6 +14,7 @@ export default defineConfig({
         secure: false,
       },
     },
+    allowedHosts: ["localhost:8080"],
   },
   resolve: {
     alias: {

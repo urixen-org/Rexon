@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -164,6 +166,24 @@ func startPlayit() {
 	}
 }
 
+func AttachProxy(r *gin.Engine, targetURL string) {
+	target, err := url.Parse(targetURL)
+	if err != nil {
+		panic(err)
+	}
+
+	proxy := httputil.NewSingleHostReverseProxy(target)
+
+	proxy.ModifyResponse = func(resp *http.Response) error {
+		resp.Header.Set("Access-Control-Allow-Origin", "*")
+		return nil
+	}
+
+	r.NoRoute(func(c *gin.Context) {
+		proxy.ServeHTTP(c.Writer, c.Request)
+	})
+}
+
 func runServer() {
 	flag.Parse()
 	limit = ratelimit.New(*rps)
@@ -186,7 +206,7 @@ func runServer() {
 	route := gin.New()
 	r := route.Group("/api")
 
-	r.Use(gin.LoggerWithFormatter(func(params gin.LogFormatterParams) string {
+	route.Use(gin.LoggerWithFormatter(func(params gin.LogFormatterParams) string {
 		rexon := color.New(color.FgBlue).Sprint("[REXON]")
 		var statusColor *color.Color
 		switch {
@@ -209,6 +229,7 @@ func runServer() {
 			params.ClientIP,
 		)
 	}))
+	AttachProxy(route, "http://localhost:5173")
 	r.Use(leakBucket())
 
 	r.POST("/start", handlers.HandleStart)

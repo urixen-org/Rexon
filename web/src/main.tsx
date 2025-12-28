@@ -24,8 +24,8 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <PasscodeProvider>
       <SidebarProvider defaultOpen={false} className="">
-        {/*<Root />*/}
-        <Router />
+        <Root />
+        {/*<Router />*/}
         <AppSidebar />
       </SidebarProvider>
     </PasscodeProvider>
