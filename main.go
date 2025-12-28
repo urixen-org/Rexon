@@ -238,6 +238,8 @@ func runServer() {
 		player.DELETE("/:UUID/whitelist", handlers.HandlePlayerUnwhitelist)
 
 	}
+	r.GET("/propertise", handlers.HandleServerProperties)
+	r.PATCH("/propertise", handlers.HandleUpdateServerProperties)
 
 	fGroup := r.Group("/filemanager")
 	fGroup.Use(validatePath())

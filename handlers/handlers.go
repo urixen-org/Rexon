@@ -1146,8 +1146,13 @@ func HandleGetPlayerData(ctx *gin.Context) {
 
 	env := config.LoadEnv()
 	base := env.ServerFolder
+	props, err := mc.LoadProperties(base + "server.properties")
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+	}
+	world, _ := props.Get("level-name")
 
-	player, err := mc.LoadPlayer(base+"/world", uuid)
+	player, err := mc.LoadPlayer(base+world, uuid)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": err.Error()})
 		return
@@ -1299,6 +1304,89 @@ func HandlePlayerUnwhitelist(ctx *gin.Context) {
 
 	ctx.JSON(200, gin.H{"success": true})
 }
+
+type KeyValue struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
+type UpdateRequest struct {
+	Update   []KeyValue `json:"update"`
+	Passcode string     `json:"passcode"`
+}
+
+func HandleServerProperties(ctx *gin.Context) {
+	if !utils.VerifyMe(ctx) {
+		return
+	}
+
+	base := config.LoadEnv().ServerFolder
+
+	props, err := mc.LoadProperties(base + "/server.properties")
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, props.All())
+}
+
+func HandleUpdateServerProperties(ctx *gin.Context) {
+	var body UpdateRequest
+	ctx.ShouldBindJSON(body)
+
+	passcodeStr := body.Passcode
+
+	if passcodeStr == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "passcode required"})
+		return
+	}
+
+	passcodeStr = strings.TrimSpace(passcodeStr)
+	currentPasscode := sql.GetValue("passcode")
+
+	if passcodeStr != currentPasscode {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid passcode"})
+		return
+	}
+
+	if len(body.Update) == 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "no updates provided",
+		})
+		return
+	}
+
+	base := config.LoadEnv().ServerFolder
+
+	props, err := mc.LoadProperties(base + "/server.properties")
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	for _, kv := range body.Update {
+		if kv.Key != "" {
+			props.Set(kv.Key, kv.Value)
+		}
+	}
+
+	if err := props.Save(base + "server.properties"); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"updated": body.Update,
+	})
+}
+
 func HandleConfig(ctx *gin.Context) {
 	if !utils.VerifyMe(ctx) {
 		return
