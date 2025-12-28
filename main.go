@@ -137,7 +137,7 @@ func (w *MyWriter) Write(p []byte) (int, error) {
 	}
 
 	ts := time.Now().Format("15:04:05")
-	c.Printf("[%s] %s: %s\n", ts, w.Prefix, output+"\n")
+	c.Printf("[%s] %s: %s\n", ts, w.Prefix, output)
 	return len(p), nil
 }
 
@@ -149,7 +149,7 @@ func startPlayit() {
 	if sql.GetValue("playit_path") == "" || sql.GetValue("playit_secret") == "" {
 		panic("Playit is not setup \n please setup it by adding setup -skip-to=3")
 	}
-	cmd := exec.Command(sql.GetValue("playit_path"), "--secret", sql.GetValue("playit_secret"))
+	cmd := exec.Command(sql.GetValue("playit_path"), "--secret", sql.GetValue("playit_secret"), "--stdout")
 	cmd.Stdout = &MyWriter{
 		Prefix: "PLAYIT",
 		Color:  color.New(color.FgGreen),
