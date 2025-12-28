@@ -226,8 +226,16 @@ func runServer() {
 	r.GET("/config", handlers.HandleConfig)
 	r.POST("/config", handlers.HandleConfigUpdate)
 	r.POST("/software", handlers.HandleSoftwareInstall)
-	r.GET("/players", handlers.HandleGetAllPlayer)
-	r.GET("/players/:UUID", handlers.HandleGetPlayerData)
+	player := r.Group("/player")
+	{
+		player.GET("/", handlers.HandleGetAllPlayer)
+		player.GET("/:UUID", handlers.HandleGetPlayerData)
+
+		player.POST("/:UUID/ban", handlers.HandlePlayerBan)
+		player.DELETE("/:UUID/ban", handlers.HandlePlayerUnban)
+
+		player.POST("/:UUID/whitelist", handlers.HandlePlayerWhitelist)
+	}
 
 	fGroup := r.Group("/filemanager")
 	fGroup.Use(validatePath())

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -1080,18 +1081,156 @@ func HandleGetAllPlayer(ctx *gin.Context) {
 	})
 }
 
+var dashedUUID = regexp.MustCompile(
+	`^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`,
+)
+
+func requireUUID(ctx *gin.Context) (string, bool) {
+	uuid := ctx.Param("UUID")
+	if !dashedUUID.MatchString(uuid) {
+		ctx.JSON(400, gin.H{"error": "invalid uuid format"})
+		return "", false
+	}
+	return uuid, true
+}
+
 func HandleGetPlayerData(ctx *gin.Context) {
 	if !utils.VerifyMe(ctx) {
 		return
 	}
-	world := config.LoadEnv().ServerFolder + "/world"
-	uuid := ctx.Param("UUID")
-	resp, err := mc.LoadPlayer(world, uuid)
+
+	uuid, ok := requireUUID(ctx)
+	if !ok {
+		return
+	}
+
+	env := config.LoadEnv()
+	base := env.ServerFolder
+
+	player, err := mc.LoadPlayer(base+"/world", uuid)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusFound, resp)
+
+	isBanned, banInfo, _ := mc.ExistsByUUID(base+"/banned-players.json", uuid)
+	isWhitelisted, _, _ := mc.ExistsByUUID(base+"/whitelist.json", uuid)
+	isOpped, _, _ := mc.ExistsByUUID(base+"/ops.json", uuid)
+
+	player["is_banned"] = isBanned
+	player["is_whitelisted"] = isWhitelisted
+	player["is_opped"] = isOpped
+
+	if isBanned {
+		player["ban_info"] = banInfo
+	}
+
+	ctx.JSON(200, player)
+}
+
+func HandlePlayerBan(ctx *gin.Context) {
+	defer panicGuard(ctx)
+
+	if !utils.VerifyMe(ctx) {
+		return
+	}
+
+	uuid, ok := requireUUID(ctx)
+	if !ok {
+		return
+	}
+
+	var body map[string]interface{}
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.JSON(400, gin.H{"error": "invalid JSON"})
+		return
+	}
+
+	env := config.LoadEnv()
+	path := env.ServerFolder + "/banned-players.json"
+
+	arr, err := mc.ReadJSONArray(path)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	body["uuid"] = uuid
+	arr = append(arr, body)
+
+	if err := mc.WriteJSONArray(path, arr); err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(200, gin.H{"success": true})
+}
+
+func HandlePlayerUnban(ctx *gin.Context) {
+	defer panicGuard(ctx)
+
+	if !utils.VerifyMe(ctx) {
+		return
+	}
+
+	uuid, ok := requireUUID(ctx)
+	if !ok {
+		return
+	}
+
+	env := config.LoadEnv()
+	if err := mc.RemoveByUUID(env.ServerFolder+"/banned-players.json", uuid); err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(200, gin.H{"success": true})
+}
+
+func HandlePlayerWhitelist(ctx *gin.Context) {
+	defer panicGuard(ctx)
+
+	if !utils.VerifyMe(ctx) {
+		return
+	}
+
+	uuid, ok := requireUUID(ctx)
+	if !ok {
+		return
+	}
+
+	var body map[string]interface{}
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.JSON(400, gin.H{"error": "invalid JSON"})
+		return
+	}
+
+	env := config.LoadEnv()
+	path := env.ServerFolder + "/whitelist.json"
+
+	arr, err := mc.ReadJSONArray(path)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	body["uuid"] = uuid
+	arr = append(arr, body)
+
+	if err := mc.WriteJSONArray(path, arr); err != nil {
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(200, gin.H{"success": true})
+}
+
+func panicGuard(ctx *gin.Context) {
+	if r := recover(); r != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("panic: %v", r),
+		})
+	}
 }
 
 func HandleConfig(ctx *gin.Context) {
