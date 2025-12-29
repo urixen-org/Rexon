@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"rexon/sql"
@@ -114,4 +115,15 @@ func DownloadFile(filepath string, url string) error {
 
 	fmt.Printf("Downloaded file to: %s\n", filepath)
 	return nil
+}
+
+func GetRexonPath() string {
+	var path string
+	home, _ := os.UserHomeDir()
+	if runtime.GOOS == "windows" {
+		path = filepath.Join(home, "AppData", "Roaming", ".rexon")
+	} else {
+		path = filepath.Join(home, ".rexon")
+	}
+	return path
 }

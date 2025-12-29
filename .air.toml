@@ -7,7 +7,8 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "tmp\\rexon.exe"
-  cmd = "go build -o ./tmp/rexon.exe ."
+  cmd = "go build -o 
+  tmp/rexon.exe ."
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata", "web", "server"]
   exclude_file = []

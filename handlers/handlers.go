@@ -5,15 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"time"
 
 	"rexon/config"
 	"rexon/filemanager"
+	"rexon/java"
 	"rexon/mc"
 	"rexon/playit"
 	"rexon/process"
@@ -1385,6 +1388,59 @@ func HandleUpdateServerProperties(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"updated": body.Update,
 	})
+}
+func HandleJREInstaller(ctx *gin.Context) {
+	defer panicGuard(ctx)
+	bindRawBody(ctx)
+
+	if !utils.VerifyMe(ctx) {
+		return
+	}
+
+	jre := ctx.Param("JRE")
+	if jre == "" {
+		ctx.JSON(http.StatusBadRequest, types.MsgFormat{
+			Type:    "installation",
+			Status:  "error",
+			Payload: "missing JRE version",
+		})
+		return
+	}
+
+	go func(version string) {
+		if _, _, err := java.InstallJRE(version); err != nil {
+			log.Printf("[JRE] install failed (%s): %v", version, err)
+		}
+	}(jre)
+
+	ctx.JSON(http.StatusAccepted, types.MsgFormat{
+		Type:    "installation",
+		Status:  "installing",
+		Payload: "Installing Java runtime. Speed depends on internet connection.",
+	})
+}
+
+func HandleListJavaInstallation(ctx *gin.Context) {
+	if !utils.VerifyMe(ctx) {
+		return
+	}
+	home, _ := os.UserHomeDir()
+	var javaDir string
+	if runtime.GOOS == "windows" {
+		javaDir = filepath.Join(home, "AppData", "Roaming", ".rexon", "java")
+	} else {
+		javaDir = filepath.Join(home, ".rexon", "java")
+	}
+
+	jres, err := java.ListInstalledJREs(javaDir)
+	if err != nil {
+		ctx.JSON(500, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	ctx.JSON(200, jres)
+
 }
 
 func HandleConfig(ctx *gin.Context) {

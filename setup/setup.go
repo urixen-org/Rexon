@@ -4,14 +4,17 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"regexp"
 	"rexon/ancii"
+	"rexon/java"
 	"rexon/playit"
 	"rexon/sql"
 	"rexon/utils"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/term"
@@ -19,7 +22,7 @@ import (
 
 func Setup(skipTo int) {
 	ancii.PrintNoInput()
-	sql.Init("./data.rexon")
+	sql.Init(utils.GetRexonPath() + "/data.rexon")
 	defer sql.Close()
 
 	step := 0
@@ -118,11 +121,11 @@ func Setup(skipTo int) {
 		case "n", "no":
 			fmt.Println("Installing playit \nIt may take time, based on internet speed")
 			if runtime.GOOS == "windows" {
-				err := playit.InstallPlayit("./playit.exe")
+				err := playit.InstallPlayit(utils.GetRexonPath() + "/playit.exe")
 				if err != nil {
 					panic(err)
 				}
-				sql.SetValue("playit_path", "./playit.exe")
+				sql.SetValue("playit_path", utils.GetRexonPath() + "/playit.exe")
 			} else {
 				err := playit.InstallPlayit("/etc/playit/playit")
 				if err != nil {
@@ -154,6 +157,61 @@ func Setup(skipTo int) {
 		json.Unmarshal(data, &agentdata)
 		sql.SetValue("playit_agent_id", agentdata.Data.AgentID)
 		renderBox("Playit setup complete")
+		step++
+	}
+	if step <= 4 {
+		renderBox("Install java\nenter a java version you want to install \nstep: 4")
+
+		type AdoptiumResponse struct {
+			AvailableLtsReleases     []int `json:"available_lts_releases"`
+			AvailableReleases        []int `json:"available_releases"`
+			MostRecentFeatureRelease int   `json:"most_recent_feature_release"`
+			MostRecentFeatureVersion int   `json:"most_recent_feature_version"`
+			MostRecentLts            int   `json:"most_recent_lts"`
+			TipVersion               int   `json:"tip_version"`
+		}
+
+		resp, err := http.Get("https://api.adoptium.net/v3/info/available_releases")
+		if err != nil {
+			panic(err)
+		}
+		defer resp.Body.Close()
+
+		var decoded AdoptiumResponse
+		if err := json.NewDecoder(resp.Body).Decode(&decoded); err != nil {
+			panic(err)
+		}
+		ltsMap := make(map[int]bool)
+		for _, v := range decoded.AvailableLtsReleases {
+			ltsMap[v] = true
+		}
+		fmt.Println("Available Java versions:")
+		for _, v := range decoded.AvailableReleases {
+			if ltsMap[v] {
+				fmt.Println("-", v, "(LTS)")
+			} else {
+				fmt.Println("-", v)
+			}
+		}
+
+		fmt.Print("› ")
+
+		choiceRaw, _ := reader.ReadString('\n')
+		choice := strings.ToLower(strings.TrimSpace(choiceRaw))
+		renderBox("Installing java " + choice + "\nplease wait for some moment while we download java. Speed is based on your internet")
+		done := make(chan struct{})
+		go spinnerBlocks(done, "Installing Java")
+
+		path, ok, err := java.InstallJRE(choice)
+
+		close(done)
+		if !ok {
+			panic(err)
+		}
+		sql.SetValue("java_default", path)
+
+		renderBox("\nJava" + choice + "installed succesfully and setuped as default")
+
 		step++
 	}
 
@@ -220,4 +278,30 @@ func ClaimCode(playitPath string, claimCode, agentType, version string) playit.U
 		}
 	}
 	//return playit.UnifiedResponse{}
+}
+
+func spinnerBlocks(done <-chan struct{}, msg string) {
+	frames := []string{
+		"[⬛⬛⬛⬛⬛]",
+		"[🟩⬛⬛⬛⬛]",
+		"[🟩🟩⬛⬛⬛]",
+		"[🟩🟩🟩⬛⬛]",
+		"[🟩🟩🟩🟩⬛]",
+		"[🟩🟩🟩🟩🟩]",
+		"[⬛🟩🟩🟩🟩]",
+		"[⬛⬛🟩🟩🟩]",
+		"[⬛⬛⬛🟩🟩]",
+	}
+	i := 0
+	for {
+		select {
+		case <-done:
+			fmt.Print("\r\033[K")
+			return
+		default:
+			fmt.Printf("\r%s %s", frames[i%len(frames)], msg)
+			time.Sleep(120 * time.Millisecond)
+			i++
+		}
+	}
 }

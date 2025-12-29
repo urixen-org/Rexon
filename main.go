@@ -22,10 +22,11 @@ import (
 	"rexon/filemanager"
 	"rexon/filemanager/ftp"
 	"rexon/handlers"
-	"rexon/playit"
+	"rexon/java"
 	"rexon/setup"
 	"rexon/sql"
 	"rexon/types"
+	"rexon/utils"
 
 	"github.com/fatih/color"
 	"github.com/gin-gonic/gin"
@@ -191,7 +192,7 @@ func runServer() {
 	env := config.LoadEnv()
 	filemanager.BaseDir = env.ServerFolder
 
-	sql.Init("./data.rexon")
+	sql.Init(utils.GetRexonPath() + "/data.rexon")
 	defer sql.Close()
 
 	if sql.GetValue("passcode") == "" {
@@ -247,6 +248,8 @@ func runServer() {
 	r.GET("/config", handlers.HandleConfig)
 	r.POST("/config", handlers.HandleConfigUpdate)
 	r.POST("/software", handlers.HandleSoftwareInstall)
+	r.POST("/config/java/:JRE", handlers.HandleJREInstaller)
+	r.GET("/config/java", handlers.HandleListJavaInstallation)
 	player := r.Group("/player")
 	{
 		player.GET("/", handlers.HandleGetAllPlayer)
@@ -359,18 +362,8 @@ func main() {
 			},
 		)
 		commander.Map("test", "test", "test", func(args objx.Map) {
-			sql.Init("./data.rexon")
-			defer sql.Close()
-			fmt.Println(sql.GetValue("playit_secret"))
-			fmt.Println(sql.GetValue("playit_agent_id"))
-			client := playit.NewClient(sql.GetValue("playit_secret"))
-			//client.CreateTunnel("")
-			// CreateTunnel(name string, tunnelType string, portType string, portCount int, agentID string, localIP string, localPort int, enabled bool
-			data, err := client.ListTunnels(nil, "30d5e759-16ca-40fd-9006-a4632cce710e")
-			if err != nil {
-				fmt.Println(err)
-			}
-			fmt.Println(string(data))
+			path, ok, err := java.InstallJRE("17")
+			fmt.Println(path, ok, err)
 		})
 	})
 }
