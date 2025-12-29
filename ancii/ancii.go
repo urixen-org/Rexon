@@ -36,7 +36,6 @@ func rainbowText(input string) string {
 	return result
 }
 
-// Print prints the ASCII art with the panel info
 func Print(web, ftp, ftpUser, ftpPass string) {
 	labelColor := lipgloss.NewStyle().Foreground(lipgloss.Color("12")) // bright cyan
 	valueColor := lipgloss.NewStyle().Foreground(lipgloss.Color("13")) // bright magenta
@@ -58,7 +57,6 @@ func Print(web, ftp, ftpUser, ftpPass string) {
 	fmt.Println(box.Render(content))
 }
 
-// PrintNoInput prints only the ASCII art without any input
 func PrintNoInput() {
 	box := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).

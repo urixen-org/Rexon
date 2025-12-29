@@ -247,8 +247,11 @@ func runServer() {
 	})
 	r.GET("/config", handlers.HandleConfig)
 	r.POST("/config", handlers.HandleConfigUpdate)
+	r.GET("/config/startup", handlers.HandleStartupCommand)
+	r.POST("/config/startup", handlers.HandleUpdateStartupCommand)
 	r.POST("/software", handlers.HandleSoftwareInstall)
 	r.POST("/config/java/:JRE", handlers.HandleJREInstaller)
+	r.PATCH("/config/java/:JRE", handlers.HandleUpdateJRE)
 	r.GET("/config/java", handlers.HandleListJavaInstallation)
 	player := r.Group("/player")
 	{

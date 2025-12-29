@@ -43,7 +43,43 @@ func HandleStart(ctx *gin.Context) {
 		return
 	}
 
-	session, err := mgr.Start("java", "-jar", "server.jar", "--nogui")
+	startupCmd := sql.GetValue("startup_command")
+	if startupCmd == "" {
+		startupCmd = "{{java}} -jar {{serverjar}} --nogui"
+	}
+
+	replacements := map[string]string{
+		"{{serverjar}}": sql.GetValue("server_jar_name"),
+		"{{memory}}":    sql.GetValue("server_memory"),
+		"{{port}}":      sql.GetValue("server_port"),
+		"{{serverdir}}": config.LoadEnv().ServerFolder,
+	}
+
+	if replacements["{{serverjar}}"] == "" {
+		replacements["{{serverjar}}"] = "server.jar"
+	}
+	if replacements["{{memory}}"] == "" {
+		replacements["{{memory}}"] = "1G"
+	}
+	if replacements["{{port}}"] == "" {
+		replacements["{{port}}"] = "25565"
+	}
+
+	for placeholder, value := range replacements {
+		startupCmd = strings.ReplaceAll(startupCmd, placeholder, value)
+	}
+
+	cmdParts := strings.Fields(startupCmd)
+	cmdParts[0] = sql.GetValue("java_default")
+	if len(cmdParts) == 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "startup command is empty"})
+		return
+	}
+
+	command := cmdParts[0]
+	args := cmdParts[1:]
+
+	session, err := mgr.Start(command, args...)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -1443,6 +1479,34 @@ func HandleListJavaInstallation(ctx *gin.Context) {
 
 }
 
+func HandleUpdateJRE(ctx *gin.Context) {
+	defer panicGuard(ctx)
+	bindRawBody(ctx)
+
+	if !utils.VerifyMe(ctx) {
+		return
+	}
+
+	jre := ctx.Param("JRE")
+	if jre == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "JRE required"})
+		return
+	}
+	var jrePath string
+	if runtime.GOOS == "windows" {
+		jrePath = filepath.Join(utils.GetRexonPath(), "java", "jre-"+jre, "bin", "java.exe")
+	} else {
+		jrePath = filepath.Join(utils.GetRexonPath(), "java", "jre-"+jre, "bin", "java")
+	}
+	if _, err := os.Stat(jrePath); os.IsNotExist(err) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "JRE not found"})
+		return
+	}
+	sql.SetValue("java_default", jrePath)
+	ctx.JSON(http.StatusOK, gin.H{"message": "JRE updated successfully"})
+
+}
+
 func HandleConfig(ctx *gin.Context) {
 	if !utils.VerifyMe(ctx) {
 		return
@@ -1450,12 +1514,22 @@ func HandleConfig(ctx *gin.Context) {
 
 	env := config.LoadEnv()
 
+	startupCmd := sql.GetValue("startup_command")
+	if startupCmd == "" {
+		startupCmd = "{{java}} -jar {{serverjar}} --nogui"
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
-		"server_folder": env.ServerFolder,
-		"web_listen_on": env.WebListenOn,
-		"ftp_host":      env.FTPHost,
-		"ftp_port":      env.FTPPort,
-		"ftp_user":      env.FTPUser,
+		"server_folder":   env.ServerFolder,
+		"web_listen_on":   env.WebListenOn,
+		"ftp_host":        env.FTPHost,
+		"ftp_port":        env.FTPPort,
+		"ftp_user":        env.FTPUser,
+		"startup_command": startupCmd,
+		"java_default":    sql.GetValue("java_default"),
+		"server_jar_name": sql.GetValue("server_jar_name"),
+		"server_memory":   sql.GetValue("server_memory"),
+		"server_port":     sql.GetValue("server_port"),
 	})
 }
 
@@ -1485,21 +1559,141 @@ func HandleConfigUpdate(ctx *gin.Context) {
 		return
 	}
 
-	newPasscode := fmt.Sprintf("%v", body["new_passcode"])
-	newPasscode = strings.TrimSpace(newPasscode)
+	if newPasscode, exists := body["new_passcode"]; exists {
+		passcode := fmt.Sprintf("%v", newPasscode)
+		passcode = strings.TrimSpace(passcode)
 
-	if len(newPasscode) != 6 || !isNumeric(newPasscode) {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "passcode must be exactly 6 digits"})
-		return
+		if len(passcode) != 6 || !isNumeric(passcode) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "passcode must be exactly 6 digits"})
+			return
+		}
+		sql.SetValue("passcode", passcode)
 	}
 
-	sql.SetValue("passcode", newPasscode)
+	if startupCmd, exists := body["startup_command"]; exists {
+		cmdStr := fmt.Sprintf("%v", startupCmd)
+		cmdStr = strings.TrimSpace(cmdStr)
+		if cmdStr != "" {
+			sql.SetValue("startup_command", cmdStr)
+		}
+	}
+
+	if serverJar, exists := body["server_jar_name"]; exists {
+		jarName := fmt.Sprintf("%v", serverJar)
+		jarName = strings.TrimSpace(jarName)
+		if jarName != "" {
+			sql.SetValue("server_jar_name", jarName)
+		}
+	}
+
+	if serverMemory, exists := body["server_memory"]; exists {
+		memory := fmt.Sprintf("%v", serverMemory)
+		memory = strings.TrimSpace(memory)
+		if memory != "" {
+			sql.SetValue("server_memory", memory)
+		}
+	}
+
+	if serverPort, exists := body["server_port"]; exists {
+		port := fmt.Sprintf("%v", serverPort)
+		port = strings.TrimSpace(port)
+		if port != "" {
+			sql.SetValue("server_port", port)
+		}
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
-func isNumeric(s string) bool {
-	for _, c := range s {
-		if c < '0' || c > '9' {
+func HandleStartupCommand(ctx *gin.Context) {
+	if !utils.VerifyMe(ctx) {
+		return
+	}
+
+	startupCmd := sql.GetValue("startup_command")
+	if startupCmd == "" {
+		startupCmd = "{{java}} -jar {{serverjar}} --nogui"
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"startup_command": startupCmd,
+		"current_values": gin.H{
+			"java_default":    sql.GetValue("java_default"),
+			"server_jar_name": sql.GetValue("server_jar_name"),
+			"server_memory":   sql.GetValue("server_memory"),
+			"server_port":     sql.GetValue("server_port"),
+			"server_dir":      config.LoadEnv().ServerFolder,
+		},
+	})
+}
+
+func HandleUpdateStartupCommand(ctx *gin.Context) {
+
+	var body struct {
+		StartupCommand string `json:"startup_command"`
+		ServerJarName  string `json:"server_jar_name,omitempty"`
+		ServerMemory   string `json:"server_memory,omitempty"`
+		ServerPort     string `json:"server_port,omitempty"`
+		Passcode       string `json:"passcode,omitempty"`
+	}
+
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON: " + err.Error()})
+		return
+	}
+
+	passcodeStr := body.Passcode
+
+	if passcodeStr == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "passcode required"})
+		return
+	}
+
+	passcodeStr = strings.TrimSpace(passcodeStr)
+	currentPasscode := sql.GetValue("passcode")
+
+	if passcodeStr != currentPasscode {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid passcode"})
+		return
+	}
+
+	if body.StartupCommand == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "startup_command cannot be empty"})
+		return
+	}
+
+	cmdParts := strings.Fields(body.StartupCommand)
+	if len(cmdParts) == 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "startup command must contain at least one word"})
+		return
+	}
+
+	sql.SetValue("startup_command", body.StartupCommand)
+
+	if body.ServerJarName != "" {
+		sql.SetValue("server_jar_name", body.ServerJarName)
+	}
+
+	if body.ServerMemory != "" {
+		sql.SetValue("server_memory", body.ServerMemory)
+	}
+
+	if body.ServerPort != "" {
+		sql.SetValue("server_port", body.ServerPort)
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":          "ok",
+		"startup_command": body.StartupCommand,
+		"server_jar_name": body.ServerJarName,
+		"server_memory":   body.ServerMemory,
+		"server_port":     body.ServerPort,
+	})
+}
+
+func isNumeric(str string) bool {
+	for _, char := range str {
+		if char < '0' || char > '9' {
 			return false
 		}
 	}

@@ -1,29 +1,24 @@
-[13:39:08] [Server thread/INFO]: Starting minecraft server version 1.8.9
-[13:39:08] [Server thread/INFO]: Loading properties
-[13:39:08] [Server thread/INFO]: Default game type: SURVIVAL
-[13:39:08] [Server thread/INFO]: Generating keypair
-[13:39:09] [Server thread/INFO]: Starting Minecraft server on *:25565
-[13:39:09] [Server thread/INFO]: Using default channel type
-[13:39:09] [Server thread/WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
-[13:39:09] [Server thread/WARN]: The server will make no attempt to authenticate usernames. Beware.
-[13:39:09] [Server thread/WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
-[13:39:09] [Server thread/WARN]: To change this, set "online-mode" to "true" in the server.properties file.
-[13:39:09] [Server thread/INFO]: Preparing level "world"
-[13:39:09] [Server thread/INFO]: Preparing start region for level 0
-[13:39:10] [Server thread/INFO]: Preparing spawn area: 53%
-[13:39:11] [Server thread/INFO]: Done (1.761s)! For help, type "help" or "?"
-[13:39:11] [Server thread/INFO]: Starting GS4 status listener
-[13:39:11] [Query Listener #1/INFO]: Query running on 0.0.0.0:25565
-[13:39:20] [Server thread/INFO]: Banned player samir717le
-[13:40:08] [Server thread/WARN]: Can't keep up! Did the system time change, or is the server overloaded? Running 2948ms behind, skipping 58 tick(s)
-[13:40:58] [Server thread/INFO]: Added samir717le to the whitelist
-[13:41:21] [Server thread/INFO]: Opped samir717le
-[13:49:49] [Server thread/WARN]: Can't keep up! Did the system time change, or is the server overloaded? Running 3871ms behind, skipping 77 tick(s)
-[13:50:15] [Server thread/WARN]: Can't keep up! Did the system time change, or is the server overloaded? Running 6951ms behind, skipping 139 tick(s)
-[13:58:38] [Server thread/INFO]: Stopping the server
-[13:58:38] [Server thread/INFO]: Stopping server
-[13:58:38] [Server thread/INFO]: Saving players
-[13:58:38] [Server thread/INFO]: Saving worlds
-[13:58:38] [Server thread/INFO]: Saving chunks for level 'world'/Overworld
-[13:58:38] [Server thread/INFO]: Saving chunks for level 'world'/Nether
-[13:58:38] [Server thread/INFO]: Saving chunks for level 'world'/The End
+[22:06:20] [Server thread/INFO]: Starting minecraft server version 1.8.9
+[22:06:20] [Server thread/INFO]: Loading properties
+[22:06:20] [Server thread/INFO]: Default game type: SURVIVAL
+[22:06:20] [Server thread/INFO]: Generating keypair
+[22:06:21] [Server thread/INFO]: Starting Minecraft server on *:25565
+[22:06:21] [Server thread/INFO]: Using default channel type
+[22:06:22] [Server thread/WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[22:06:22] [Server thread/WARN]: The server will make no attempt to authenticate usernames. Beware.
+[22:06:22] [Server thread/WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[22:06:22] [Server thread/WARN]: To change this, set "online-mode" to "true" in the server.properties file.
+[22:06:23] [Server thread/INFO]: Preparing level "world"
+[22:06:23] [Server thread/INFO]: Preparing start region for level 0
+[22:06:24] [Server thread/INFO]: Preparing spawn area: 6%
+[22:06:25] [Server thread/INFO]: Preparing spawn area: 49%
+[22:06:26] [Server thread/INFO]: Done (3.213s)! For help, type "help" or "?"
+[22:06:26] [Server thread/INFO]: Starting GS4 status listener
+[22:06:26] [Query Listener #1/INFO]: Query running on 0.0.0.0:25565
+[22:06:52] [Server thread/INFO]: Stopping the server
+[22:06:52] [Server thread/INFO]: Stopping server
+[22:06:52] [Server thread/INFO]: Saving players
+[22:06:52] [Server thread/INFO]: Saving worlds
+[22:06:52] [Server thread/INFO]: Saving chunks for level 'world'/Overworld
+[22:06:52] [Server thread/INFO]: Saving chunks for level 'world'/Nether
+[22:06:52] [Server thread/INFO]: Saving chunks for level 'world'/The End

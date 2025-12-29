@@ -19,6 +19,36 @@
       "value": "123456",
       "type": "string",
       "description": "6-digit passcode for authentication"
+    },
+    {
+      "key": "server_memory",
+      "value": "2G",
+      "type": "string",
+      "description": "Memory allocation for server (e.g., 1G, 2G, 4G)"
+    },
+    {
+      "key": "server_port",
+      "value": "25565",
+      "type": "string",
+      "description": "Server port number"
+    },
+    {
+      "key": "server_jar",
+      "value": "server.jar",
+      "type": "string",
+      "description": "Server JAR filename"
+    },
+    {
+      "key": "basic_startup_cmd",
+      "value": "{{java}} -jar {{serverjar}} --nogui",
+      "type": "string",
+      "description": "Basic startup command template"
+    },
+    {
+      "key": "optimized_startup_cmd",
+      "value": "{{java}} -Xmx{{memory}} -Xms{{memory}} -XX:+UseG1GC -jar {{serverjar}} --nogui",
+      "type": "string",
+      "description": "Optimized startup command template"
     }
   ],
   "item": [
@@ -173,7 +203,7 @@
                 }
               ]
             },
-            "description": "Get server configuration including server folder, web listen address, FTP settings"
+            "description": "Get server configuration including server folder, web listen address, FTP settings, startup command, and related settings"
           },
           "response": []
         },
@@ -189,19 +219,160 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"passcode\": \"{{passcode}}\",\n  \"new_passcode\": \"123456\"\n}"
+              "raw": "{\n  \"passcode\": \"{{passcode}}\",\n  \"new_passcode\": \"123456\",\n  \"startup_command\": \"{{optimized_startup_cmd}}\",\n  \"server_jar_name\": \"{{server_jar}}\",\n  \"server_memory\": \"{{server_memory}}\",\n  \"server_port\": \"{{server_port}}\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/config",
               "host": ["{{base_url}}"],
               "path": ["api", "config"]
             },
-            "description": "Update server configuration (currently supports changing passcode)"
+            "description": "Update server configuration including passcode, startup command, server jar name, memory allocation, and server port"
           },
           "response": []
+        },
+        {
+          "name": "Startup Command",
+          "item": [
+            {
+              "name": "Get Startup Command Configuration",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api/config/startup?passcode={{passcode}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "config", "startup"],
+                  "query": [
+                    {
+                      "key": "passcode",
+                      "value": "{{passcode}}"
+                    }
+                  ]
+                },
+                "description": "Get current startup command configuration with placeholder information and current values"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Startup Command Configuration",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"passcode\": \"{{passcode}}\",\n  \"startup_command\": \"{{optimized_startup_cmd}}\",\n  \"server_jar_name\": \"{{server_jar}}\",\n  \"server_memory\": \"{{server_memory}}\",\n  \"server_port\": \"{{server_port}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/config/startup",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "config", "startup"]
+                },
+                "description": "Update startup command and related settings. Available placeholders: {{java}}, {{serverjar}}, {{memory}}, {{port}}, {{serverdir}}"
+              },
+              "response": []
+            },
+            {
+              "name": "Set Basic Vanilla Server",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"passcode\": \"{{passcode}}\",\n  \"startup_command\": \"{{basic_startup_cmd}}\",\n  \"server_jar_name\": \"{{server_jar}}\",\n  \"server_memory\": \"1G\",\n  \"server_port\": \"{{server_port}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/config/startup",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "config", "startup"]
+                },
+                "description": "Set basic vanilla Minecraft server configuration"
+              },
+              "response": []
+            },
+            {
+              "name": "Set Paper Server with Optimizations",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"passcode\": \"{{passcode}}\",\n  \"startup_command\": \"{{java}} -Xmx{{memory}} -Xms{{memory}} -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20 -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -jar {{serverjar}} --nogui\",\n  \"server_jar_name\": \"paper-1.20.1.jar\",\n  \"server_memory\": \"4G\",\n  \"server_port\": \"25565\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/config/startup",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "config", "startup"]
+                },
+                "description": "Set Paper server with advanced GC optimizations for high performance"
+              },
+              "response": []
+            },
+            {
+              "name": "Set Modded Server Configuration",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"passcode\": \"{{passcode}}\",\n  \"startup_command\": \"{{java}} -Xmx{{memory}} -Xms1G -Dfile.encoding=UTF-8 -Dfml.queryResult=confirm -jar {{serverjar}} --nogui --world world --port {{port}}\",\n  \"server_jar_name\": \"forge-1.20.1-server.jar\",\n  \"server_memory\": \"6G\",\n  \"server_port\": \"{{server_port}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/config/startup",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "config", "startup"]
+                },
+                "description": "Set modded server configuration with Forge-specific arguments"
+              },
+              "response": []
+            },
+            {
+              "name": "Set Development Server with Debug",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"passcode\": \"{{passcode}}\",\n  \"startup_command\": \"{{java}} -Xmx{{memory}} -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005 -jar {{serverjar}} --nogui --port {{port}}\",\n  \"server_jar_name\": \"{{server_jar}}\",\n  \"server_memory\": \"{{server_memory}}\",\n  \"server_port\": \"25566\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/config/startup",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "config", "startup"]
+                },
+                "description": "Set development server with Java debug port enabled on 5005"
+              },
+              "response": []
+            }
+          ],
+          "description": "Startup command configuration with customizable placeholders. Available placeholders: {{java}}, {{serverjar}}, {{memory}}, {{port}}, {{serverdir}}"
         }
       ],
-      "description": "Server configuration management"
+      "description": "Server configuration management including startup command customization"
     },
     {
       "name": "Server Properties",
@@ -295,6 +466,29 @@
               "path": ["api", "config", "java", "17"]
             },
             "description": "Install specific Java Runtime Environment (replace 17 with desired version)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Default Java Runtime",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passcode\": \"{{passcode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/config/java/17",
+              "host": ["{{base_url}}"],
+              "path": ["api", "config", "java", "17"]
+            },
+            "description": "Update the default Java runtime to use a specific installed version (replace 17 with desired version)"
           },
           "response": []
         }
