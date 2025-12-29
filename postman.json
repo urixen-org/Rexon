@@ -1,0 +1,963 @@
+{
+  "info": {
+    "name": "Rexon Server API",
+    "description": "Comprehensive API documentation for Rexon Minecraft Server Management Backend",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "passcode",
+      "value": "123456",
+      "type": "string",
+      "description": "6-digit passcode for authentication"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Verify Passcode",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passcode\": \"{{passcode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/verify",
+              "host": ["{{base_url}}"],
+              "path": ["api", "verify"]
+            },
+            "description": "Verify the passcode for authentication"
+          },
+          "response": []
+        },
+        {
+          "name": "Ping Server",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/ping",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ping"]
+            },
+            "description": "Check if server is running and responsive"
+          },
+          "response": []
+        }
+      ],
+      "description": "Authentication and server status endpoints"
+    },
+    {
+      "name": "Server Management",
+      "item": [
+        {
+          "name": "Start Server",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passcode\": \"{{passcode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/start",
+              "host": ["{{base_url}}"],
+              "path": ["api", "start"]
+            },
+            "description": "Start the Minecraft server"
+          },
+          "response": []
+        },
+        {
+          "name": "Stop Server",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passcode\": \"{{passcode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/stop",
+              "host": ["{{base_url}}"],
+              "path": ["api", "stop"]
+            },
+            "description": "Stop the Minecraft server"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Server Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passcode\": \"{{passcode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "status"]
+            },
+            "description": "Get current server running status and session ID"
+          },
+          "response": []
+        },
+        {
+          "name": "WebSocket Connection",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/ws",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ws"]
+            },
+            "description": "WebSocket connection for real-time server communication"
+          },
+          "response": []
+        }
+      ],
+      "description": "Server control and monitoring endpoints"
+    },
+    {
+      "name": "Configuration",
+      "item": [
+        {
+          "name": "Get Configuration",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/config?passcode={{passcode}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "config"],
+              "query": [
+                {
+                  "key": "passcode",
+                  "value": "{{passcode}}"
+                }
+              ]
+            },
+            "description": "Get server configuration including server folder, web listen address, FTP settings"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Configuration",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passcode\": \"{{passcode}}\",\n  \"new_passcode\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/config",
+              "host": ["{{base_url}}"],
+              "path": ["api", "config"]
+            },
+            "description": "Update server configuration (currently supports changing passcode)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Server configuration management"
+    },
+    {
+      "name": "Server Properties",
+      "item": [
+        {
+          "name": "Get Server Properties",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/propertise?passcode={{passcode}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "propertise"],
+              "query": [
+                {
+                  "key": "passcode",
+                  "value": "{{passcode}}"
+                }
+              ]
+            },
+            "description": "Get all server.properties configuration"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Server Properties",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passcode\": \"{{passcode}}\",\n  \"update\": [\n    {\n      \"key\": \"server-port\",\n      \"value\": \"25565\"\n    },\n    {\n      \"key\": \"difficulty\",\n      \"value\": \"normal\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/propertise",
+              "host": ["{{base_url}}"],
+              "path": ["api", "propertise"]
+            },
+            "description": "Update server.properties with key-value pairs"
+          },
+          "response": []
+        }
+      ],
+      "description": "Minecraft server.properties management"
+    },
+    {
+      "name": "Java Management",
+      "item": [
+        {
+          "name": "List Java Installations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/config/java?passcode={{passcode}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "config", "java"],
+              "query": [
+                {
+                  "key": "passcode",
+                  "value": "{{passcode}}"
+                }
+              ]
+            },
+            "description": "List all installed Java versions"
+          },
+          "response": []
+        },
+        {
+          "name": "Install Java Runtime",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passcode\": \"{{passcode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/config/java/17",
+              "host": ["{{base_url}}"],
+              "path": ["api", "config", "java", "17"]
+            },
+            "description": "Install specific Java Runtime Environment (replace 17 with desired version)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Java runtime management"
+    },
+    {
+      "name": "Software Management",
+      "item": [
+        {
+          "name": "Install Software",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"software_name\": \"paper\",\n  \"version\": \"1.20.1\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/software",
+              "host": ["{{base_url}}"],
+              "path": ["api", "software"]
+            },
+            "description": "Install Minecraft server software (Paper, Spigot, etc.)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Minecraft server software installation"
+    },
+    {
+      "name": "Player Management",
+      "item": [
+        {
+          "name": "Get All Players",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/player?passcode={{passcode}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "player"],
+              "query": [
+                {
+                  "key": "passcode",
+                  "value": "{{passcode}}"
+                }
+              ]
+            },
+            "description": "Get list of all players from usercache.json"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Player Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/player/550e8400-e29b-41d4-a716-446655440000?passcode={{passcode}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "player", "550e8400-e29b-41d4-a716-446655440000"],
+              "query": [
+                {
+                  "key": "passcode",
+                  "value": "{{passcode}}"
+                }
+              ]
+            },
+            "description": "Get specific player data by UUID including ban, whitelist, and op status"
+          },
+          "response": []
+        },
+        {
+          "name": "Ban Player",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passcode\": \"{{passcode}}\",\n  \"reason\": \"Griefing\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/player/550e8400-e29b-41d4-a716-446655440000/ban",
+              "host": ["{{base_url}}"],
+              "path": [
+                "api",
+                "player",
+                "550e8400-e29b-41d4-a716-446655440000",
+                "ban"
+              ]
+            },
+            "description": "Ban a player by UUID with optional reason"
+          },
+          "response": []
+        },
+        {
+          "name": "Unban Player",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passcode\": \"{{passcode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/player/550e8400-e29b-41d4-a716-446655440000/ban",
+              "host": ["{{base_url}}"],
+              "path": [
+                "api",
+                "player",
+                "550e8400-e29b-41d4-a716-446655440000",
+                "ban"
+              ]
+            },
+            "description": "Remove ban from a player by UUID"
+          },
+          "response": []
+        },
+        {
+          "name": "Whitelist Player",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passcode\": \"{{passcode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/player/550e8400-e29b-41d4-a716-446655440000/whitelist",
+              "host": ["{{base_url}}"],
+              "path": [
+                "api",
+                "player",
+                "550e8400-e29b-41d4-a716-446655440000",
+                "whitelist"
+              ]
+            },
+            "description": "Add player to whitelist by UUID"
+          },
+          "response": []
+        },
+        {
+          "name": "Remove from Whitelist",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passcode\": \"{{passcode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/player/550e8400-e29b-41d4-a716-446655440000/whitelist",
+              "host": ["{{base_url}}"],
+              "path": [
+                "api",
+                "player",
+                "550e8400-e29b-41d4-a716-446655440000",
+                "whitelist"
+              ]
+            },
+            "description": "Remove player from whitelist by UUID"
+          },
+          "response": []
+        }
+      ],
+      "description": "Player management operations"
+    },
+    {
+      "name": "File Manager",
+      "item": [
+        {
+          "name": "List Directory",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/filemanager/list?path=/&passcode={{passcode}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "filemanager", "list"],
+              "query": [
+                {
+                  "key": "path",
+                  "value": "/"
+                },
+                {
+                  "key": "passcode",
+                  "value": "{{passcode}}"
+                }
+              ]
+            },
+            "description": "List files and directories in specified path"
+          },
+          "response": []
+        },
+        {
+          "name": "Read File",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/filemanager/read?path=/server.properties&passcode={{passcode}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "filemanager", "read"],
+              "query": [
+                {
+                  "key": "path",
+                  "value": "/server.properties"
+                },
+                {
+                  "key": "passcode",
+                  "value": "{{passcode}}"
+                }
+              ]
+            },
+            "description": "Read file content from server"
+          },
+          "response": []
+        },
+        {
+          "name": "Write File",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"path\": \"/test.txt\",\n  \"passcode\": \"{{passcode}}\",\n  \"content\": \"Hello World!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/filemanager/write",
+              "host": ["{{base_url}}"],
+              "path": ["api", "filemanager", "write"]
+            },
+            "description": "Write content to file"
+          },
+          "response": []
+        },
+        {
+          "name": "Download File",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/filemanager/download?path=/server.jar&passcode={{passcode}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "filemanager", "download"],
+              "query": [
+                {
+                  "key": "path",
+                  "value": "/server.jar"
+                },
+                {
+                  "key": "passcode",
+                  "value": "{{passcode}}"
+                }
+              ]
+            },
+            "description": "Download file from server"
+          },
+          "response": []
+        },
+        {
+          "name": "Upload File",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "path",
+                  "value": "/uploads/",
+                  "type": "text"
+                },
+                {
+                  "key": "passcode",
+                  "value": "{{passcode}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/filemanager/upload",
+              "host": ["{{base_url}}"],
+              "path": ["api", "filemanager", "upload"]
+            },
+            "description": "Upload file to server"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete File/Directory",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"path\": \"/test.txt\",\n  \"passcode\": \"{{passcode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/filemanager/unlink",
+              "host": ["{{base_url}}"],
+              "path": ["api", "filemanager", "unlink"]
+            },
+            "description": "Delete file or directory"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Directory",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"path\": \"/new_directory\",\n  \"passcode\": \"{{passcode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/filemanager/create-dir",
+              "host": ["{{base_url}}"],
+              "path": ["api", "filemanager", "create-dir"]
+            },
+            "description": "Create new directory"
+          },
+          "response": []
+        },
+        {
+          "name": "Copy File/Directory",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"path\": \"/source.txt\",\n  \"destination\": \"/destination.txt\",\n  \"passcode\": \"{{passcode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/filemanager/copy",
+              "host": ["{{base_url}}"],
+              "path": ["api", "filemanager", "copy"]
+            },
+            "description": "Copy file or directory to new location"
+          },
+          "response": []
+        },
+        {
+          "name": "Move File/Directory",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"path\": \"/source.txt\",\n  \"destination\": \"/moved.txt\",\n  \"passcode\": \"{{passcode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/filemanager/move",
+              "host": ["{{base_url}}"],
+              "path": ["api", "filemanager", "move"]
+            },
+            "description": "Move file or directory to new location"
+          },
+          "response": []
+        },
+        {
+          "name": "Rename File/Directory",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"path\": \"/old_name.txt\",\n  \"new_name\": \"new_name.txt\",\n  \"passcode\": \"{{passcode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/filemanager/rename",
+              "host": ["{{base_url}}"],
+              "path": ["api", "filemanager", "rename"]
+            },
+            "description": "Rename file or directory"
+          },
+          "response": []
+        },
+        {
+          "name": "Compress Files",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"path\": \"/directory_to_compress\",\n  \"archive_name\": \"backup.zip\",\n  \"passcode\": \"{{passcode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/filemanager/compress",
+              "host": ["{{base_url}}"],
+              "path": ["api", "filemanager", "compress"]
+            },
+            "description": "Compress files/directories into archive"
+          },
+          "response": []
+        },
+        {
+          "name": "Extract Archive",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"path\": \"/backup.zip\",\n  \"destination\": \"/extracted\",\n  \"passcode\": \"{{passcode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/filemanager/extract",
+              "host": ["{{base_url}}"],
+              "path": ["api", "filemanager", "extract"]
+            },
+            "description": "Extract archive to destination directory"
+          },
+          "response": []
+        }
+      ],
+      "description": "File and directory management operations"
+    },
+    {
+      "name": "Playit Tunneling",
+      "item": [
+        {
+          "name": "List Tunnels",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/playit/tunnel/list?passcode={{passcode}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "playit", "tunnel", "list"],
+              "query": [
+                {
+                  "key": "passcode",
+                  "value": "{{passcode}}"
+                }
+              ]
+            },
+            "description": "List all playit tunnels"
+          },
+          "response": []
+        },
+        {
+          "name": "List Specific Tunnel",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/playit/tunnel/list?tunnel=tunnel_id&passcode={{passcode}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "playit", "tunnel", "list"],
+              "query": [
+                {
+                  "key": "tunnel",
+                  "value": "tunnel_id"
+                },
+                {
+                  "key": "passcode",
+                  "value": "{{passcode}}"
+                }
+              ]
+            },
+            "description": "Get specific tunnel information by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Query Regions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/playit/region/query?passcode={{passcode}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "playit", "region", "query"],
+              "query": [
+                {
+                  "key": "passcode",
+                  "value": "{{passcode}}"
+                }
+              ]
+            },
+            "description": "Query available playit regions"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Agent Run Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/playit/agent/rundata?passcode={{passcode}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "playit", "agent", "rundata"],
+              "query": [
+                {
+                  "key": "passcode",
+                  "value": "{{passcode}}"
+                }
+              ]
+            },
+            "description": "Get playit agent runtime data"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Tunnel",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Minecraft Server\",\n  \"tunnel_type\": \"minecraft-java\",\n  \"port_type\": \"tcp\",\n  \"port_count\": 1,\n  \"port\": 25565,\n  \"passcode\": \"{{passcode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/playit/tunnel/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "playit", "tunnel", "create"]
+            },
+            "description": "Create new playit tunnel"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Tunnel",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tunnel_id\": \"tunnel_id_here\",\n  \"passcode\": \"{{passcode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/playit/tunnel/delete",
+              "host": ["{{base_url}}"],
+              "path": ["api", "playit", "tunnel", "delete"]
+            },
+            "description": "Delete playit tunnel by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Tunnel",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tunnel_id\": \"tunnel_id_here\",\n  \"name\": \"Updated Minecraft Server\",\n  \"passcode\": \"{{passcode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/playit/tunnel/update",
+              "host": ["{{base_url}}"],
+              "path": ["api", "playit", "tunnel", "update"]
+            },
+            "description": "Update existing playit tunnel configuration"
+          },
+          "response": []
+        }
+      ],
+      "description": "Playit.gg tunnel management for external access"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ]
+}
