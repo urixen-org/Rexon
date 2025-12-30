@@ -963,24 +963,42 @@ func HandleCreateTunnel(ctx *gin.Context) {
 	}
 	port := int(portFloat)
 
-	data, err := client.CreateTunnel(
-		name,
-		tunnelType,
-		portType,
-		portCount,
-		sql.GetValue("playit_agent_id"),
-		"0.0.0.0",
-		port,
-		true,
-	)
+	if tunnelType == "minecraft-java" {
+		data, err := client.CreateJavaTunnel(
+			sql.GetValue("playit_agent_id"),
+			"0.0.0.0",
+			port,
+			"tcp",
+			portCount,
+		)
 
-	if err != nil {
-		ctx.JSON(500, gin.H{"error": err.Error()})
-		return
+		if err != nil {
+			ctx.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		var unified any
+		json.Unmarshal(data, &unified)
+		ctx.JSON(200, unified)
+	} else {
+		data, err := client.CreateTunnel(
+			name,
+			tunnelType,
+			portType,
+			portCount,
+			sql.GetValue("playit_agent_id"),
+			"0.0.0.0",
+			port,
+			true,
+		)
+
+		if err != nil {
+			ctx.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		var unified any
+		json.Unmarshal(data, &unified)
+		ctx.JSON(200, unified)
 	}
-	var unified any
-	json.Unmarshal(data, &unified)
-	ctx.JSON(200, unified)
 }
 
 func HandleTunnelDelete(ctx *gin.Context) {

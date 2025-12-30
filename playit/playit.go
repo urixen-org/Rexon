@@ -523,3 +523,65 @@ type ClaimSetupResponse struct {
 	Status string `json:"status"`
 	Data   string `json:"data"`
 }
+
+type CreateJavaTunnelType struct {
+	TunnelType string `json:"tunnel_type"`
+	AgentID    string `json:"agent_id"`
+	LocalIP    string `json:"local_ip"`
+	LocalPort  int    `json:"local_port"`
+	PortType   string `json:"port_type"`
+	PortCount  int    `json:"port_count"`
+	Type       string `json:"type"`
+}
+
+func (c *Client) CreateJavaTunnel(agentID string, localIP string, localPort int, portType string, portCount int) ([]byte, error) {
+	req := CreateJavaTunnelType{
+		TunnelType: "minecraft-java",
+		AgentID:    agentID,
+		LocalIP:    localIP,
+		LocalPort:  localPort,
+		PortType:   portType,
+		PortCount:  portCount,
+		Type:       "create-tunnel",
+	}
+
+	return c.doRequestCloud("POST", "/account", req, true)
+}
+
+func (c *Client) doRequestCloud(method, path string, body interface{}, needsAuth bool) ([]byte, error) {
+	var reqBody io.Reader
+	if body != nil {
+		jsonData, err := json.Marshal(body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal request body: %w", err)
+		}
+		reqBody = bytes.NewBuffer(jsonData)
+	}
+
+	req, err := http.NewRequest(method, "https://api.playit.cloud"+path, reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	if needsAuth && c.AgentKey != "" {
+		req.Header.Set("Authorization", "Agent-Key "+c.AgentKey)
+	}
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return respBody, fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(respBody))
+	}
+
+	return respBody, nil
+}
