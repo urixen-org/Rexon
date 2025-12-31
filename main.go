@@ -264,6 +264,11 @@ func runServer() {
 		player.DELETE("/:UUID/whitelist", handlers.HandlePlayerUnwhitelist)
 
 	}
+	world := r.Group("/world")
+	{
+		world.GET("/", handlers.HandleListWorlds)
+
+	}
 	r.GET("/propertise", handlers.HandleServerProperties)
 	r.PATCH("/propertise", handlers.HandleUpdateServerProperties)
 

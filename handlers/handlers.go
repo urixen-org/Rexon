@@ -1530,6 +1530,36 @@ func HandleUpdateJRE(ctx *gin.Context) {
 
 }
 
+func HandleListWorlds(ctx *gin.Context) {
+	if !utils.VerifyMe(ctx) {
+		return
+	}
+
+	allFoldersAndFiles, err := filemanager.ListDir("/")
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var worlds []string
+
+	for _, folder := range allFoldersAndFiles {
+		if folder.Type == "dir" {
+			folders, err := filemanager.ListDir(folder.Path)
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			for _, folder := range folders {
+				if folder.Type == "file" && folder.Name == "level.dat" {
+					worlds = append(worlds, strings.Trim(folder.Path, "level.dat"))
+				}
+			}
+		}
+	}
+	ctx.JSON(http.StatusOK, gin.H{"worlds": worlds})
+}
+
 func HandleConfig(ctx *gin.Context) {
 	if !utils.VerifyMe(ctx) {
 		return

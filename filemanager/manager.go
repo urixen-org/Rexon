@@ -7,10 +7,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"rexon/config"
 	"rexon/types"
 )
 
-var BaseDir = ""
+var BaseDir = config.LoadEnv().ServerFolder
 
 func sanitizePath(p string) (string, error) {
 	full := filepath.Join(BaseDir, p)
