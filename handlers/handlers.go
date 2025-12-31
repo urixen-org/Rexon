@@ -78,6 +78,7 @@ func HandleStart(ctx *gin.Context) {
 
 	command := cmdParts[0]
 	args := cmdParts[1:]
+	fmt.Println(command, args)
 
 	session, err := mgr.Start(command, args...)
 	if err != nil {
