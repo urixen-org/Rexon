@@ -962,12 +962,11 @@ func HandleCreateTunnel(ctx *gin.Context) {
 	}
 	portCount := int(portCountFloat)
 
-	portFloat, ok := body["port"].(float64)
+	port, ok := body["port"].(int)
 	if !ok {
 		ctx.JSON(400, gin.H{"error": "port must be number"})
 		return
 	}
-	port := int(portFloat)
 
 	if tunnelType == "minecraft-java" {
 		data, err := client.CreateJavaTunnel(
