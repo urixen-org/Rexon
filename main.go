@@ -121,9 +121,6 @@ func (w *MyWriter) Write(p []byte) (int, error) {
 	}
 
 	output := strings.TrimSpace(cleanANSI(string(p)))
-	if output == "" {
-		return len(p), nil
-	}
 
 	// Skip printing if it's identical to the last line
 	if output == w.lastLine {
@@ -131,7 +128,7 @@ func (w *MyWriter) Write(p []byte) (int, error) {
 	}
 	w.lastLine = output
 
-	skipKeywords := []string{"0 tunnels registered"}
+	skipKeywords := []string{"0 tunnels registered", "INFO"}
 
 	for _, kw := range skipKeywords {
 		if strings.Contains(output, kw) {
@@ -203,6 +200,8 @@ func runServer() {
 
 	go ftp.Start()
 	startPlayit()
+
+	gin.SetMode("release")
 
 	route := gin.New()
 	r := route.Group("/api")

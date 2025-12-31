@@ -16,11 +16,12 @@ type Env struct {
 	FTPHost      string
 	FTPPort      int
 	FTPUser      string
+	GIN_MODE     string
 }
 
 func LoadEnv() *Env {
 	envFile := utils.GetRexonPath() + "/.env"
-	if err := godotenv.Load(envFile, "./.env"); err != nil {
+	if err := godotenv.Load(envFile); err != nil {
 		log.Println("Warning: .env file not found, using system environment variables")
 	}
 
