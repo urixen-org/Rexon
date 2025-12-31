@@ -26,6 +26,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/shirou/gopsutil/v4/cpu"
+	"github.com/shirou/gopsutil/v4/disk"
+	"github.com/shirou/gopsutil/v4/mem"
 )
 
 var mgr = process.NewManager()
@@ -1751,4 +1754,171 @@ func isNumeric(str string) bool {
 		}
 	}
 	return true
+}
+
+func getSystemStats() (*types.SystemStats, error) {
+
+	// Get CPU stats
+	cpuPercent, err := cpu.Percent(time.Second, false)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get CPU stats: %v", err)
+	}
+
+	cpuInfo, err := cpu.Info()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get CPU info: %v", err)
+	}
+
+	cpuUsage := 0.0
+	if len(cpuPercent) > 0 {
+		cpuUsage = cpuPercent[0]
+	}
+
+	cpuModelName := "Unknown"
+	cpuCores := runtime.NumCPU()
+	if len(cpuInfo) > 0 {
+		cpuModelName = cpuInfo[0].ModelName
+		cpuCores = int(cpuInfo[0].Cores)
+	}
+
+	// Get memory stats
+	memInfo, err := mem.VirtualMemory()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get memory stats: %v", err)
+	}
+
+	// Get storage stats for server folder only
+	env := config.LoadEnv()
+	serverFolderPath := env.ServerFolder
+	if serverFolderPath == "" {
+		serverFolderPath = "."
+	}
+
+	// Get the disk usage for the server folder path
+	usage, err := disk.Usage(serverFolderPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get server folder disk usage: %v", err)
+	}
+
+	// Create storage stats array with only the server folder
+	var diskStats []types.DiskStats
+	diskStats = append(diskStats, types.DiskStats{
+		Path:        serverFolderPath,
+		Total:       usage.Total,
+		Used:        usage.Used,
+		Free:        usage.Free,
+		UsedPercent: usage.UsedPercent,
+		FileSystem:  "Server Folder",
+	})
+
+	return &types.SystemStats{
+		CPU: types.CPUStats{
+			Usage:     cpuUsage,
+			Cores:     cpuCores,
+			ModelName: cpuModelName,
+		},
+		Memory: types.MemoryStats{
+			Total:       memInfo.Total,
+			Used:        memInfo.Used,
+			Available:   memInfo.Available,
+			UsedPercent: memInfo.UsedPercent,
+		},
+		Storage: diskStats,
+	}, nil
+}
+
+func HandleSystemStatsWebSocket(ctx *gin.Context) {
+	ws, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
+	if err != nil {
+		return
+	}
+	defer ws.Close()
+
+	ws.SetReadDeadline(time.Now().Add(60 * time.Second))
+	ws.SetPongHandler(func(string) error {
+		ws.SetReadDeadline(time.Now().Add(60 * time.Second))
+		return nil
+	})
+
+	ticker := time.NewTicker(1 * time.Millisecond)
+	defer ticker.Stop()
+
+	pingTicker := time.NewTicker(30 * time.Second)
+	defer pingTicker.Stop()
+
+	wsCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	verified := false
+
+	go func() {
+		for {
+			msgType, message, err := ws.ReadMessage()
+			if err != nil {
+				cancel()
+				return
+			}
+
+			if msgType == websocket.TextMessage {
+				var passcode struct {
+					Passcode interface{} `json:"passcode"`
+				}
+
+				if err := json.Unmarshal(message, &passcode); err == nil && passcode.Passcode != nil {
+					passcodeStr := fmt.Sprintf("%v", passcode.Passcode)
+					if passcodeStr != sql.GetValue("passcode") {
+						utils.SendMsg(ws, "verification", "fail", "Invalid passcode")
+						cancel()
+						return
+					} else {
+						verified = true
+						utils.SendMsg(ws, "verification", "success", "Passcode verified")
+						continue
+					}
+				}
+			}
+
+			if !verified {
+				utils.SendMsg(ws, "error", "fail", "Not authenticated")
+				continue
+			}
+		}
+	}()
+
+	utils.SendMsg(ws, "status", "connected", "System monitoring connected")
+
+	for {
+		select {
+		case <-ticker.C:
+			if !verified {
+				continue
+			}
+
+			stats, err := getSystemStats()
+			if err != nil {
+				utils.SendMsg(ws, "error", "fail", "Failed to get system stats: "+err.Error())
+				continue
+			}
+
+			msg := types.MsgFormat{
+				Type:    "system_stats",
+				Status:  "success",
+				Payload: stats,
+			}
+
+			if b, err := json.Marshal(msg); err == nil {
+				if err := ws.WriteMessage(websocket.TextMessage, b); err != nil {
+					return
+				}
+			}
+
+		case <-pingTicker.C:
+			if err := ws.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return
+			}
+
+		case <-wsCtx.Done():
+			return
+		}
+	}
 }

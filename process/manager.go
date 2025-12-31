@@ -1,4 +1,3 @@
-
 package process
 
 import (
@@ -10,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -64,7 +64,7 @@ func (b *LogBroker) Broadcast(line string) {
 		select {
 		case ch <- line:
 		default:
-		// i am here to just say: "I am doing nothing"
+			// i am here to just say: "I am doing nothing"
 		}
 	}
 }
@@ -95,7 +95,7 @@ func (m *Manager) Start(command string, args ...string) (string, error) {
 		return "", errors.New("process is still stopping")
 	}
 
-	m.sessionID = time.Now().Format("20060102_150405")
+	m.sessionID = strconv.Itoa(m.cmd.Process.Pid)
 	logPath := filepath.Join("logs", m.sessionID+".log")
 
 	if err := os.MkdirAll("logs", 0755); err != nil {

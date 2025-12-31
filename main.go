@@ -236,6 +236,7 @@ func runServer() {
 	r.POST("/stop", handlers.HandleStop)
 	r.POST("/status", handlers.HandleStatus)
 	r.GET("/ws", handlers.HandleWebSocket)
+	r.GET("/ws/system", handlers.HandleSystemStatsWebSocket)
 	r.POST("/verify", handlers.HandlePasscodeVerify)
 	r.GET("/ping", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, types.MsgFormat{

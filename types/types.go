@@ -153,3 +153,32 @@ type TunnelCreationResponse struct {
 	} `json:"data"`
 	Status string `json:"status"`
 }
+
+type SystemStats struct {
+	CPU     CPUStats    `json:"cpu"`
+	Memory  MemoryStats `json:"memory"`
+	Storage []DiskStats `json:"storage"`
+}
+
+type CPUStats struct {
+	Usage       float64 `json:"usage"`
+	Cores       int     `json:"cores"`
+	ModelName   string  `json:"model_name"`
+	Temperature float64 `json:"temperature,omitempty"`
+}
+
+type MemoryStats struct {
+	Total       uint64  `json:"total"`
+	Used        uint64  `json:"used"`
+	Available   uint64  `json:"available"`
+	UsedPercent float64 `json:"used_percent"`
+}
+
+type DiskStats struct {
+	Path        string  `json:"path"`
+	Total       uint64  `json:"total"`
+	Used        uint64  `json:"used"`
+	Free        uint64  `json:"free"`
+	UsedPercent float64 `json:"used_percent"`
+	FileSystem  string  `json:"filesystem"`
+}
