@@ -646,9 +646,9 @@ func HandleSoftwareInstall(ctx *gin.Context) {
 
 	ctx.Set("rawBody", body)
 
-	/*if !utils.VerifyMe(ctx) {
-	return
-	}*/
+	if !utils.VerifyMe(ctx) {
+		return
+	}
 
 	url := fmt.Sprintf("%v", body["url"])
 
@@ -656,12 +656,17 @@ func HandleSoftwareInstall(ctx *gin.Context) {
 		ctx.JSON(400, gin.H{"error": "url is required"})
 		return
 	}
-	if err := utils.DownloadFile(config.LoadEnv().ServerFolder+"/server.jar", url); err != nil {
-		ctx.JSON(400, gin.H{"error": err})
-		return
-	}
+	go func(url, path string) {
+		if err := utils.DownloadFile(path, url); err != nil {
+			log.Printf("[INSTALL] download failed: %v", err)
+		}
+	}(url, config.LoadEnv().ServerFolder+"/server.jar")
 
-	ctx.JSON(http.StatusCreated, types.MsgFormat{Status: "success", Payload: "The server software downloaded successfully as server.jar"})
+	ctx.JSON(http.StatusAccepted, types.MsgFormat{
+		Status:  "installing",
+		Payload: "Download started in background",
+	})
+
 }
 
 func HandleFileManagerMetadata(ctx *gin.Context) {
@@ -966,7 +971,7 @@ func HandleCreateTunnel(ctx *gin.Context) {
 	if tunnelType == "minecraft-java" {
 		data, err := client.CreateJavaTunnel(
 			sql.GetValue("playit_agent_id"),
-			"0.0.0.0",
+			"172.0.0.1",
 			port,
 			"tcp",
 			portCount,

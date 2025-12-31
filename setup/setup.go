@@ -125,7 +125,7 @@ func Setup(skipTo int) {
 				if err != nil {
 					panic(err)
 				}
-				sql.SetValue("playit_path", utils.GetRexonPath() + "/playit.exe")
+				sql.SetValue("playit_path", utils.GetRexonPath()+"/playit.exe")
 			} else {
 				err := playit.InstallPlayit("/etc/playit/playit")
 				if err != nil {
@@ -243,7 +243,7 @@ func ClaimCode(playitPath string, claimCode, agentType, version string) playit.U
 	json.Unmarshal(data, &resp)
 
 	if resp.Data == "WaitingForUserVisit" {
-		fmt.Printf("Visit: https://playit.gg/claim/%s\n", claimCode)
+		fmt.Printf("Visit: https://playit.gg/mc/%s\n", claimCode)
 	}
 
 	for {

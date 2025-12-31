@@ -3,6 +3,7 @@ package config
 import (
 	"log"
 	"os"
+	"rexon/utils"
 	"strconv"
 
 	"github.com/joho/godotenv"
@@ -18,7 +19,8 @@ type Env struct {
 }
 
 func LoadEnv() *Env {
-	if err := godotenv.Load(); err != nil {
+	envFile := utils.GetRexonPath() + "/.env"
+	if err := godotenv.Load(envFile, "./.env"); err != nil {
 		log.Println("Warning: .env file not found, using system environment variables")
 	}
 

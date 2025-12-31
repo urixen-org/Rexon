@@ -565,7 +565,7 @@ func (c *Client) doRequestCloud(method, path string, body interface{}, needsAuth
 
 	req.Header.Set("Content-Type", "application/json")
 	if needsAuth && c.AgentKey != "" {
-		req.Header.Set("Authorization", "Agent-Key "+c.AgentKey)
+		req.Header.Set("Authorization", "agent-key "+c.AgentKey)
 	}
 
 	resp, err := c.HTTPClient.Do(req)
