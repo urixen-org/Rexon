@@ -30,6 +30,10 @@ func Setup(skipTo int) {
 		step = skipTo
 	}
 
+	if err := createEnvIfMissing(utils.GetRexonPath() + "/.env", envContent); err != nil {
+		panic(err)
+	}
+
 	re := regexp.MustCompile(`^\d{6}$`)
 
 	title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("10"))

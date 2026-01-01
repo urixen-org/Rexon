@@ -1,0 +1,45 @@
+package main
+
+import (
+	"errors"
+	"os"
+)
+
+const envContent = `# Path to the folder where your server files are stored
+# Make sure this folder exists and has proper read/write permissions
+# do not include any trailing slash (/ at the end)
+server_folder=E:/rexon/server
+
+# Address and port where the web interface will listen
+# 'localhost:80' means only the local machine can access it
+# Change to '0.0.0.0:80' if you want network-wide access
+web_listen_on=localhost:8080
+
+# FTP server host binding
+# '0.0.0.0' allows connections from any network interface
+# For local-only access, use '127.0.0.1'
+ftp_host=0.0.0.0
+
+# FTP server listening port
+# Default FTP is 21, using 2121 avoids conflicts with other FTP services
+ftp_port=2121
+
+# FTP username
+# The user that clients will use to login to the FTP server
+ftp_user=rexon
+`
+
+
+func createEnvIfMissing(path string, content string) error {
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+	if err != nil {
+		if errors.Is(err, os.ErrExist) {
+			return nil
+		}
+		return err
+	}
+	defer f.Close()
+
+	_, err = f.WriteString(content)
+	return err
+}
