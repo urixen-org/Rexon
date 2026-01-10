@@ -1,5 +1,6 @@
-
 # Rexon™
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Furixen-org%2FRexon.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Furixen-org%2FRexon?ref=badge_shield)
+
 > **Streamline your self-hosted Minecraft server management with Rexon**
 
 ### What is Rexon?
@@ -69,3 +70,7 @@
 #### Crafted with 💖 by Urixen
 
 **Rexon™** is a trademark of Urixen. The use of this trademark is subject to the terms and conditions set forth by **Urixen.**
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Furixen-org%2FRexon.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Furixen-org%2FRexon?ref=badge_large)
